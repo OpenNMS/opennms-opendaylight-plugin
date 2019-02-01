@@ -1,0 +1,32 @@
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+           xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0
+        http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+
+        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0
+        http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+    <!-- Configuration properties -->
+    <cm:property-placeholder id="odlPluginProperties" persistent-id="org.opennms.plugins.opendaylight" update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="host" value="localhost" />
+            <cm:property name="port" value="8181" />
+            <cm:property name="username" value="admin" />
+            <cm:property name="password" value="admin" />
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient">
+        <argument index="0" value="${host}" />
+        <argument index="1" value="${port}" />
+        <argument index="2" value="${username}" />
+        <argument index="3" value="${password}" />
+    </bean>
+
+    <service interface="org.opennms.integration.api.v1.health.HealthCheck">
+        <bean class="org.opennms.plugins.odl.OpendaylightHealthCheck">
+            <argument index="0" ref="restconfClient"/>
+        </bean>
+    </service>
+
+</blueprint>
