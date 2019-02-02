@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 public class OpendaylightHealthCheck implements HealthCheck {
     private static final Logger LOG = LoggerFactory.getLogger(OpendaylightHealthCheck.class);
 
-    private static final String DESCRIPTION = "ODL Plugin :: Health Check";
+    private static final String DESCRIPTION = "Connect to the Opendaylight controller";
 
     private final OpendaylightRestconfClient restconfClient;
 
@@ -61,7 +61,7 @@ public class OpendaylightHealthCheck implements HealthCheck {
         try {
             final NetworkTopology networkTopology = restconfClient.getOperationalNetworkTopology();
             LOG.info("Network topology: {}", networkTopology);
-            return new ResponseBean(Status.Success, String.format("Found %d topologies.", networkTopology.getTopology().size()));
+            return new ResponseBean(Status.Success, String.format("Found %d topology(s).", networkTopology.getTopology().size()));
         } catch (Exception e) {
             return new ResponseBean(e);
         }
