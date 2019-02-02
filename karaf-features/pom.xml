@@ -54,8 +54,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!--
             <plugin>
                 <groupId>org.apache.karaf.tooling</groupId>
                 <artifactId>karaf-maven-plugin</artifactId>
@@ -84,13 +82,13 @@
                             </framework>
                             <features>
                                 <feature>opennms-plugins-odl</feature>
-                                <feature>opendaylight-model-oxygen-sr4</feature>
+                                <feature>my-odl-yang-support</feature>
+                                <feature>my-odl-mdsal-models</feature>
                             </features>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 
