@@ -9,18 +9,16 @@
     <!-- Configuration properties -->
     <cm:property-placeholder id="odlPluginProperties" persistent-id="org.opennms.plugins.opendaylight" update-strategy="reload">
         <cm:default-properties>
-            <cm:property name="host" value="localhost" />
-            <cm:property name="port" value="8181" />
+            <cm:property name="controllerUrl" value="http://localhost:8181" />
             <cm:property name="username" value="admin" />
             <cm:property name="password" value="admin" />
         </cm:default-properties>
     </cm:property-placeholder>
 
     <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient">
-        <argument index="0" value="${host}" />
-        <argument index="1" value="${port}" />
-        <argument index="2" value="${username}" />
-        <argument index="3" value="${password}" />
+        <argument index="0" value="${controllerUrl}" />
+        <argument index="1" value="${username}" />
+        <argument index="2" value="${password}" />
     </bean>
 
     <service interface="org.opennms.integration.api.v1.health.HealthCheck">

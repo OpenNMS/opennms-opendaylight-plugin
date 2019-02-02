@@ -64,7 +64,7 @@ public class OpendaylightRestconfClientIT {
                         .withBodyFile("operational-network-topology.json")));
 
         // Make the call
-        OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient(String.format("http://localhost:%s", wireMockRule.port()));
         NetworkTopology networkTopology = client.getOperationalNetworkTopology();
 
         // Verify
@@ -90,7 +90,7 @@ public class OpendaylightRestconfClientIT {
                         .withBodyFile("operational-topology.json")));
 
         // Make the call
-        OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient(String.format("http://localhost:%s", wireMockRule.port()));
         Topology topology = client.getOperationalTopology("flow:1");
 
         // Verify
@@ -105,7 +105,7 @@ public class OpendaylightRestconfClientIT {
                         .withBodyFile("operational-topology-node.json")));
 
         // Make the call
-        OpendaylightRestconfClient client = new OpendaylightRestconfClient("localhost", wireMockRule.port());
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient(String.format("http://localhost:%s", wireMockRule.port()));
         Node node = client.getNodeFromOperationalTopology("flow:1", "openflow:1");
 
         // Verify

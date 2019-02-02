@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<features name="openmms-plugins-omi-features" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
+<features name="openmms-plugins-odl-features" xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
 
     <repository>mvn:org.opennms.integration.api/karaf-features/${opennms.api.version}/xml</repository>
     <!-- <repository>mvn:org.opendaylight.integration/features-index/0.8.4/xml/features</repository> -->
@@ -9,12 +9,13 @@
         <feature dependency="true">shell</feature>
         <feature version="${opennms.api.version}" dependency="true">opennms-integration-api</feature>
         <feature version="${project.version}">my-odl-mdsal-models</feature>
+        <feature version="${okhttp.version}" dependency="true">okhttp</feature>
         <bundle dependency="true">mvn:com.google.guava/guava/${guava.version}</bundle>
         <bundle>mvn:org.opennms.plugins.odl/odl-plugin/${project.version}</bundle>
-	<!-- TODO: apache http client -->
     </feature>
 
     <feature name="my-odl-yang-support" description="odl" version="${project.version}">
+        <feature version="4.1.30.Final">netty</feature>
         <bundle>mvn:com.google.guava/guava/23.6-jre</bundle>
         <bundle>mvn:org.javassist/javassist/3.23.1-GA</bundle>
         <bundle>mvn:com.google.code.gson/gson/2.8.5</bundle>
@@ -87,6 +88,24 @@
         <bundle>mvn:org.opendaylight.openflowplugin.model/model-flow-base/0.6.4</bundle>
         <bundle>mvn:org.opendaylight.openflowplugin.openflowjava/openflow-protocol-api/0.6.4</bundle>
         <bundle>mvn:org.opendaylight.openflowplugin.model/model-flow-service/0.6.4</bundle>
+    </feature>
+
+    <feature name="netty" description="Netty" version="4.1.30.Final">
+        <bundle>mvn:io.netty/netty-codec-http/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-codec/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-handler/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-buffer/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-transport/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-resolver/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-transport-native-epoll/4.1.30.Final/jar/linux-x86_64</bundle>
+        <bundle>mvn:io.netty/netty-common/4.1.30.Final</bundle>
+        <bundle>mvn:io.netty/netty-transport-native-unix-common/4.1.30.Final</bundle>
+    </feature>
+
+    <feature name="okhttp" description="okhttp" version="${okhttp.version}">
+        <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.okio/${okio.bundle.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.okhttp/${okhttp.bundle.version}</bundle>
+        <bundle dependency="true">wrap:mvn:com.squareup.okhttp3/logging-interceptor/${okhttp.version}</bundle>
     </feature>
 
 </features>

@@ -30,22 +30,9 @@ package org.opennms.plugins.odl;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.ParseException;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingCodecTreeNode;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecRegistry;
@@ -58,7 +45,6 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.binding.util.BindingReflections;
 import org.opendaylight.yangtools.yang.data.api.schema.MapNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
@@ -68,12 +54,19 @@ import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
 import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
-import org.opendaylight.yangtools.yang.model.util.FilteringSchemaContextProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.google.gson.stream.JsonReader;
 
 import javassist.ClassPool;
+import okhttp3.Credentials;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Java client for Opendaylight's RESTConf API.
@@ -81,10 +74,13 @@ import javassist.ClassPool;
  * Uses Opendaylight's YANG tools for serializing/deserializing POJOs
  * to and from JSON.
  *
+ * TODO: Move away from apache httpclient to avoid bundle reloading issues.
+ *
  * @author jwhite
  */
 public class OpendaylightRestconfClient {
-    public static final int DEFAULT_PORT = 8181;
+    private static final Logger LOG = LoggerFactory.getLogger(OpendaylightRestconfClient.class);
+
     public static final String DEFAULT_USERNAME = "admin";
     public static final String DEFAULT_PASSWORD = "admin";
 
@@ -123,45 +119,71 @@ public class OpendaylightRestconfClient {
         s_topologySchemaNode = ((DataNodeContainer)s_networkTopologySchemaNode).getDataChildByName(Topology.QNAME);
     }
 
-    private final String m_host;
-    private final int m_port;
-    private final String m_username;
-    private final String m_password;
+    private final String controllerUrl;
+    private final String username;
+    private final String password;
+    private final boolean httpRequestLoggingEnabled = false;
 
-    public OpendaylightRestconfClient(String host) {
-        this(host, DEFAULT_PORT);
+    private final HttpUrl baseUrl;
+    private final OkHttpClient okHttpClient;
+
+    public OpendaylightRestconfClient(String controllerUrl) {
+        this(controllerUrl, DEFAULT_USERNAME, DEFAULT_PASSWORD);
     }
 
-    public OpendaylightRestconfClient(String host, int port) {
-        this(host, port, DEFAULT_USERNAME, DEFAULT_PASSWORD);
+    public OpendaylightRestconfClient(String controllerUrl, String username, String password) {
+        this.controllerUrl = Objects.requireNonNull(controllerUrl);
+        this.username = username;
+        this.password = password;
+
+        baseUrl = HttpUrl.parse(controllerUrl);
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("Invalid controller URL: " + controllerUrl);
+        }
+        final OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+        if (username != null && password != null) {
+            clientBuilder.authenticator((route, response) -> response.request().newBuilder()
+                    .header("Authorization", Credentials.basic(username, password))
+                    .build());
+        }
+        clientBuilder.connectTimeout(15, TimeUnit.SECONDS);
+        clientBuilder.writeTimeout(15, TimeUnit.SECONDS);
+        clientBuilder.readTimeout(60, TimeUnit.SECONDS);
+        if (httpRequestLoggingEnabled) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            clientBuilder.addInterceptor(logging);
+        }
+        okHttpClient = clientBuilder.build();
     }
 
-    public OpendaylightRestconfClient(String host, int port, String username, String password) {
-        m_host = Objects.requireNonNull(host);
-        m_port = port;
-        m_username = username;
-        m_password = password;
-    }
-
-    private String doGet(HttpGet httpGet) throws ParseException, IOException {
-        HttpHost target = new HttpHost(m_host, m_port, "http");
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(target.getHostName(), target.getPort()),
-                new UsernamePasswordCredentials(m_username, m_password));
-        try (CloseableHttpClient httpClient = HttpClients.custom()
-                .setDefaultCredentialsProvider(credsProvider).build()) {
-            HttpResponse httpResponse = httpClient.execute(target, httpGet);
-            if (httpResponse.getStatusLine().getStatusCode() != 200) {
-                throw new IOException("Get did not return a 200: " + httpResponse);
-            }
-            HttpEntity entity = httpResponse.getEntity();
-            return EntityUtils.toString(entity, Charsets.UTF_8);
+    private String doGet(HttpUrl httpUrl) throws IOException {
+        final Request request = new Request.Builder()
+                .url(httpUrl)
+                .get()
+                .build();
+        final Response response = okHttpClient.newCall(request).execute();
+        if (!response.isSuccessful()) {
+            throw new IOException(String.format("GET for URL: %s failed. Response: %s",
+                    httpUrl, response));
+        }
+        final ResponseBody body = response.body();
+        if (body != null) {
+            return body.string();
+        } else {
+            throw new IOException(String.format("No response body on GET request to: %s. Response: %s",
+                    httpUrl, response));
         }
     }
 
     public NetworkTopology getOperationalNetworkTopology() throws Exception {
-        final String json = doGet(new HttpGet("/restconf/operational/network-topology:network-topology/"));
+        final HttpUrl httpUrl = baseUrl.newBuilder()
+                .addPathSegment("restconf")
+                .addPathSegment("operational")
+                .addPathSegment("network-topology:network-topology")
+                .addPathSegment("") // add an empty segment, since it must end with trailing slash
+                .build();
+        final String json = doGet(httpUrl);
         final NormalizedNode<?,?> node = streamJsonToNode(json, s_schemaContext);
         return s_networkTopologyCodec.deserialize(node);
     }
@@ -171,8 +193,14 @@ public class OpendaylightRestconfClient {
     }
 
     public Topology getOperationalTopology(String topologyId) throws Exception {
-        final String json = doGet(new HttpGet(String.format("/restconf/operational/network-topology:network-topology/"
-                + "topology/%s", topologyId)));
+        final HttpUrl httpUrl = baseUrl.newBuilder()
+                .addPathSegment("restconf")
+                .addPathSegment("operational")
+                .addPathSegment("network-topology:network-topology")
+                .addPathSegment("topology")
+                .addPathSegment(topologyId)
+                .build();
+        final String json = doGet(httpUrl);
         final MapNode node = (MapNode)streamJsonToNode(json, s_networkTopologySchemaNode);
         return s_topologyCodec.deserialize(node.getValue().iterator().next());
     }
@@ -182,8 +210,16 @@ public class OpendaylightRestconfClient {
     }
 
     public Node getNodeFromOperationalTopology(String topologyId, String nodeId) throws Exception {
-        final String json = doGet(new HttpGet(String.format("/restconf/operational/network-topology:network-topology/"
-                + "topology/%s/node/%s", topologyId, nodeId)));
+        final HttpUrl httpUrl = baseUrl.newBuilder()
+                .addPathSegment("restconf")
+                .addPathSegment("operational")
+                .addPathSegment("network-topology:network-topology")
+                .addPathSegment("topology")
+                .addPathSegment(topologyId)
+                .addPathSegment("node")
+                .addPathSegment(nodeId)
+                .build();
+        final String json = doGet(httpUrl);
         final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
         return s_nodeCodec.deserialize(node.getValue().iterator().next());
     }
