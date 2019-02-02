@@ -15,6 +15,8 @@
         </cm:default-properties>
     </cm:property-placeholder>
 
+    <reference id="nodeDao" interface="org.opennms.integration.api.v1.dao.NodeDao" availability="mandatory"/>
+
     <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient">
         <argument index="0" value="${controllerUrl}" />
         <argument index="1" value="${username}" />
@@ -24,6 +26,13 @@
     <service interface="org.opennms.integration.api.v1.health.HealthCheck">
         <bean class="org.opennms.plugins.odl.OpendaylightHealthCheck">
             <argument index="0" ref="restconfClient"/>
+        </bean>
+    </service>
+
+    <service interface="org.opennms.integration.api.v1.pollers.ServicePollerFactory">
+        <bean class="org.opennms.plugins.odl.OpendaylightServicePollerFactory">
+            <argument index="0" ref="restconfClient"/>
+            <argument index="1" ref="nodeDao"/>
         </bean>
     </service>
 

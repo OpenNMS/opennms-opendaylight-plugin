@@ -1,8 +1,16 @@
 # opennms-odl-plugin
 
+## Goal
+
+This plugin was developed with two primary goals in mind:
+1. Integrate with Opendaylight controllers in order to provide visiblity into fault, performance, and topology data from OpenNMS
+1. Help shape the implementation and features of the OpenNMS Integration API
+
+## Prerequisites
+
 This plugin requires OpenNMS and the OpenNMS Integration API compiled from the `features/controller-api` branches.
 
-# Build & install
+## Build & install
 
 Build and install the plugin into your local Maven repository using:
 ```
@@ -16,7 +24,7 @@ feature:install opennms-plugins-odl
 bundle:watch *
 ```
 
-# Getting Started
+## Getting Started
 
 Download a copy of Opendaylight Oxygen-SR4:
 ```
