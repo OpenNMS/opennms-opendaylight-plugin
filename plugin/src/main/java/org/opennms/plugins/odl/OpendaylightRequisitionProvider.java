@@ -109,7 +109,7 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                 requisitionNode.setNodeLabel(nodeId);
 
                 RequisitionInterfaceBean requisitionIf = new RequisitionInterfaceBean(NON_RESPONSIVE_IP_ADDRESS);
-                requisitionIf.getMonitoredServices().add("IsAttachedToODLController");
+                requisitionIf.getMonitoredServices().add(OpendaylightPollerConfigExtension.SERVICE_NAME);
                 requisitionNode.getInterfaces().add(requisitionIf);
 
                 // TOPOLOGY HANDLING?

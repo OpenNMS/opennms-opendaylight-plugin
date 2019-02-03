@@ -42,4 +42,8 @@
         </bean>
     </service>
 
+    <service interface="org.opennms.integration.api.v1.config.poller.PollerConfigExtension">
+        <bean class="org.opennms.plugins.odl.OpendaylightPollerConfigExtension"/>
+    </service>
+
 </blueprint>
