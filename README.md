@@ -46,12 +46,12 @@ feature:install odl-mdsal-clustering odl-mdsal-all odl-restconf odl-l2switch-swi
 Fire up Containernet:
 ```
 docker pull containernet/containernet
-docker run --name containernet -it --rm --privileged --pid='host' -v /var/run/docker.sock:/var/run/docker.sock containe
-rnet/containernet /bin/bash
+docker run --name containernet -it --rm --privileged --pid='host' -v /var/run/docker.sock:/var/run/docker.sock containernet/containernet /bin/bash
 ```
 
 Use a script that connects to a remote controller:
 ```
+cat >net.py <<EOT
 #!/usr/bin/python
 """
 This is the most simple example to showcase Containernet.
@@ -65,7 +65,7 @@ from mininet.link import TCLink
 from mininet.log import info, setLogLevel
 setLogLevel('info')
 
-c0 = RemoteController('c0', ip='192.168.238.174', port=6633)
+c0 = RemoteController('c0', ip='172.17.0.1', port=6633)
 topo = TreeTopo(depth=2, fanout=2)
 net = Mininet(topo=topo, build=False)
 net.addController(c0)
@@ -75,9 +75,16 @@ info('*** Running CLI\n')
 CLI(net)
 info('*** Stopping network')
 net.stop()
+EOT
 ```
 
-Start the script, and when the shell is ready, run:
+Start the script:
+```
+chmod +x net.py
+./net.py
+```
+
+When the shell is ready, run:
 ```
 containernet> pingall
 *** Ping: testing ping reachability
@@ -99,4 +106,15 @@ config:update
 config:edit org.ops4j.pax.url.mvn
 property-set org.ops4j.pax.url.mvn.repositories http://nexus.opendaylight.org/content/repositories/public@id=odl
 config:update
+```
+
+Render the requisition using:
+```
+admin@opennms> provision:show-import -x opendaylight
+```
+
+
+Trigger the import using:
+```
+./bin/send-event.pl uei.opennms.org/internal/importer/reloadImport --parm 'url requisition://opendaylight'
 ```

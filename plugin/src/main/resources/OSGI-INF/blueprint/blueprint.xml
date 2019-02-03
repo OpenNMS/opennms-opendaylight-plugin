@@ -36,4 +36,10 @@
         </bean>
     </service>
 
+    <service interface="org.opennms.integration.api.v1.requisition.RequisitionProvider">
+        <bean class="org.opennms.plugins.odl.OpendaylightRequisitionProvider">
+            <argument index="0" ref="restconfClient"/>
+        </bean>
+    </service>
+
 </blueprint>

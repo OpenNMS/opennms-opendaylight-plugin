@@ -28,7 +28,9 @@
 
 package org.opennms.plugins.odl;
 
-public class OpendaylightRequisitionRequest {
+import org.opennms.integration.api.v1.requisition.RequisitionRequest;
+
+public class OpendaylightRequisitionRequest implements RequisitionRequest {
 
     private String foreignSource;
     private String host;
@@ -37,18 +39,23 @@ public class OpendaylightRequisitionRequest {
     public String getForeignSource() {
         return foreignSource;
     }
+
     public void setForeignSource(String foreignSource) {
         this.foreignSource = foreignSource;
     }
+
     public String getHost() {
         return host;
     }
+
     public void setHost(String host) {
         this.host = host;
     }
+
     public int getPort() {
         return port;
     }
+
     public void setPort(int port) {
         this.port = port;
     }
