@@ -38,8 +38,12 @@ import org.opennms.integration.api.v1.pollers.PollerResult;
 import org.opennms.integration.api.v1.pollers.ServicePoller;
 import org.opennms.integration.api.v1.pollers.Status;
 import org.opennms.integration.api.v1.pollers.beans.PollerResultBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpendaylightServicePoller implements ServicePoller {
+
+    private static final Logger LOG = LoggerFactory.getLogger(OpendaylightServicePoller.class);
 
     private final OpendaylightRestconfClient client;
     private final NodeDao nodeDao;
@@ -59,15 +63,14 @@ public class OpendaylightServicePoller implements ServicePoller {
             return CompletableFuture.completedFuture(new PollerResultBean(Status.Down, "No matching node found!"));
         }
 
-        // Determine the topology and (odl) node id
-        // TODO: Where do we store these!?!?!?
-
         String foreignId = node.getForeignId();
-        String odlTopologyId = "0"; //node.getAssetRecord().getBuilding();
+        String odlTopologyId = node.getAssetRecord().getBuilding();
         String odlNodeId = NamingUtils.getNodeIdFromForeignId(foreignId);
 
         try {
+            LOG.debug("Attempting to retrieve node with ID: {} from operational topology with ID: {}", odlNodeId, odlTopologyId);
             Node odlNode = client.getNodeFromOperationalTopology(odlTopologyId, odlNodeId);
+            LOG.debug("Retrieved node: {}", odlNode);
             if (odlNode == null) {
                 return CompletableFuture.completedFuture(new PollerResultBean(Status.Down, "Node was not found in operational topology."));
             }

@@ -30,22 +30,19 @@ package org.opennms.plugins.odl;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opennms.integration.api.v1.config.requisition.Requisition;
-import org.opennms.integration.api.v1.config.requisition.beans.RequisitionAssetBean;
 import org.opennms.integration.api.v1.config.requisition.beans.RequisitionBean;
 import org.opennms.integration.api.v1.config.requisition.beans.RequisitionInterfaceBean;
 import org.opennms.integration.api.v1.config.requisition.beans.RequisitionNodeBean;
 import org.opennms.integration.api.v1.requisition.RequisitionProvider;
+import org.opennms.integration.api.v1.requisition.RequisitionRepository;
 import org.opennms.integration.api.v1.requisition.RequisitionRequest;
-import org.opennms.plugins.odl.topo.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +62,11 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
     }
 
     private final OpendaylightRestconfClient client;
+    private final RequisitionRepository requisitionRepository;
 
-    public OpendaylightRequisitionProvider(OpendaylightRestconfClient client) {
+    public OpendaylightRequisitionProvider(OpendaylightRestconfClient client, RequisitionRepository requisitionRepository) {
         this.client = Objects.requireNonNull(client);
+        this.requisitionRepository = Objects.requireNonNull(requisitionRepository);
     }
 
     @Override
@@ -91,7 +90,11 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
         }
 
         // TODO: Load existing requisition instead of starting from scracth?
-        final RequisitionBean requisition = new RequisitionBean("ODL");
+        requisitionRepository.getDeployedRequisition("ODL");
+
+        final RequisitionBean.Builder requisitionBuilder = RequisitionBean.builder()
+                .foreignSource("ODL");
+
         for (Topology topology : networkTopology.getTopology()) {
             if (topology.getNode() == null) {
                 // no nodes in this topology
@@ -104,26 +107,19 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                 // Colons are typically used a separators, so we replace them to be safe
                 final String foreignId = nodeId.replaceAll(":", "_");
 
-                final RequisitionNodeBean requisitionNode = new RequisitionNodeBean(foreignId);
-                requisitionNode.getAssets().add(new RequisitionAssetBean("building", topologyId));
-                requisitionNode.setNodeLabel(nodeId);
-
-                RequisitionInterfaceBean requisitionIf = new RequisitionInterfaceBean(NON_RESPONSIVE_IP_ADDRESS);
-                requisitionIf.getMonitoredServices().add(OpendaylightPollerConfigExtension.SERVICE_NAME);
-                requisitionNode.getInterfaces().add(requisitionIf);
-
-                // TOPOLOGY HANDLING?
-                // Parse the topology info we need to persist
-                final List<Link> links = getLinksSourceFrom(topology, node);
-                // TODO: Serialize links
-                RequisitionAssetBean requisitionAssetTopologyInfo = new RequisitionAssetBean("vmwareTopologyInfo", "<links>");
-                requisitionNode.getAssets().add(requisitionAssetTopologyInfo);
-
-                requisition.getNodes().add(requisitionNode);
+                requisitionBuilder.node(RequisitionNodeBean.builder()
+                        .foreignId(foreignId)
+                        .nodeLabel(nodeId)
+                        .asset("building", topologyId)
+                        .iface(RequisitionInterfaceBean.builder()
+                                .ipAddress(NON_RESPONSIVE_IP_ADDRESS)
+                                .monitoredService(OpendaylightPollerConfigExtension.SERVICE_NAME)
+                                .build())
+                        .build());
             }
         }
 
-        return requisition;
+        return requisitionBuilder.build();
     }
 
     @Override
@@ -136,13 +132,6 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
     public RequisitionRequest unmarshalRequest(byte[] bytes) {
         // TODO: Minion support
         return new OpendaylightRequisitionRequest();
-    }
-
-    public static List<Link> getLinksSourceFrom(Topology topology, Node node) {
-        return topology.getLink().stream()
-                .filter(l -> node.getNodeId().equals(l.getSource().getSourceNode()))
-                .map(Link::new)
-                .collect(Collectors.toList());
     }
 
 }

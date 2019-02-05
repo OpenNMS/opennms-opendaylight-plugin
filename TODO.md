@@ -1,6 +1,8 @@
 # API Enhancements
 
 * Extend the poller configuration -> provide a definition for our node in a new package?
+** Poller should be able to add service monitors/entries to packages during a reload, and have these monitored
+** on existing nodes
 * Store/retrieve arbitrary kvps for a node
 * How to provide topology information?
 
