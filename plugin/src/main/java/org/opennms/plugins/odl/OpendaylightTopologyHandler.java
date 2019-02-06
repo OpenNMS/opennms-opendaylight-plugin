@@ -31,8 +31,8 @@ package org.opennms.plugins.odl;
 import java.util.Objects;
 
 import org.opennms.integration.api.v1.config.requisition.Requisition;
-import org.opennms.integration.api.v1.events.EventHandler;
 import org.opennms.integration.api.v1.events.EventListener;
+import org.opennms.integration.api.v1.events.EventSubscriptionService;
 import org.opennms.integration.api.v1.graph.GraphContainer;
 import org.opennms.integration.api.v1.graph.GraphRepository;
 import org.opennms.integration.api.v1.model.InMemoryEvent;
@@ -49,13 +49,16 @@ public class OpendaylightTopologyHandler implements EventListener {
     private final OpendaylightRestconfClient client;
     private final RequisitionRepository requisitionRepository;
     private final GraphRepository graphRepository;
+    private final EventSubscriptionService eventSubscriptionService;
 
     public OpendaylightTopologyHandler(OpendaylightRestconfClient client,
                                        RequisitionRepository requisitionRepository,
-                                       GraphRepository graphRepository) {
+                                       GraphRepository graphRepository,
+                                       EventSubscriptionService eventSubscriptionService) {
         this.client = Objects.requireNonNull(client);
         this.requisitionRepository = Objects.requireNonNull(requisitionRepository);
         this.graphRepository = Objects.requireNonNull(graphRepository);
+        this.eventSubscriptionService = Objects.requireNonNull(eventSubscriptionService);
     }
 
     @Override
@@ -68,8 +71,12 @@ public class OpendaylightTopologyHandler implements EventListener {
         return 1;
     }
 
-    @EventHandler(uei = IMPORT_SUCCESSFUL_UEI)
-    public void onImportSuccessful(InMemoryEvent event) {
+    @Override
+    public void onEvent(InMemoryEvent event) {
+        if (event == null || !IMPORT_SUCCESSFUL_UEI.equals(event.getUei())) {
+            return;
+        }
+
         // Extract the name of the referenced FS
         final String foreignSource = event.getParameterValue(PARM_FOREIGN_SOURCE).orElse(null);
         if (foreignSource == null) {
@@ -100,6 +107,14 @@ public class OpendaylightTopologyHandler implements EventListener {
         graphRepository.save(graphContainer);
 
         // Done.
+    }
+
+    public void init() {
+        eventSubscriptionService.addEventListener(this, IMPORT_SUCCESSFUL_UEI);
+    }
+
+    public void destroy() {
+        eventSubscriptionService.removeEventListener(this, IMPORT_SUCCESSFUL_UEI);
     }
 
 }

@@ -18,6 +18,7 @@
     <reference id="nodeDao" interface="org.opennms.integration.api.v1.dao.NodeDao" availability="mandatory"/>
     <reference id="requisitionRepository" interface="org.opennms.integration.api.v1.requisition.RequisitionRepository" availability="mandatory"/>
     <reference id="graphRepository" interface="org.opennms.integration.api.v1.graph.GraphRepository" availability="mandatory"/>
+    <reference id="eventSubscriptionService" interface="org.opennms.integration.api.v1.events.EventSubscriptionService" availability="mandatory"/>
 
     <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient">
         <argument index="0" value="${controllerUrl}" />
@@ -49,17 +50,17 @@
         <bean class="org.opennms.plugins.odl.OpendaylightPollerConfigExtension"/>
     </service>
 
-    <bean id="topologyHandler" class="org.opennms.plugins.odl.OpendaylightTopologyHandler">
+    <bean id="topologyHandler" class="org.opennms.plugins.odl.OpendaylightTopologyHandler" init-method="init" destroy-method="destroy">
         <argument index="0" ref="restconfClient"/>
         <argument index="1" ref="requisitionRepository"/>
         <argument index="2" ref="graphRepository"/>
+        <argument index="3" ref="eventSubscriptionService"/>
     </bean>
-    <!-- Expose the handler as an event listener to hook into provisiond's import events -->
-    <service interface="org.opennms.integration.api.v1.events.EventListener" ref="topologyHandler"/>
 
     <service interface="org.opennms.integration.api.v1.graph.GraphContainerProvider">
         <bean class="org.opennms.plugins.odl.OpendaylightGraphContainerProvider">
-            <argument index="0" ref="graphRepository"/>
+            <argument index="0" ref="restconfClient"/>
+            <argument index="1" ref="graphRepository"/>
         </bean>
     </service>
 

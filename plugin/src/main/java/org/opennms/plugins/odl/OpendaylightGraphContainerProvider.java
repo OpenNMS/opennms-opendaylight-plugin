@@ -28,31 +28,92 @@
 
 package org.opennms.plugins.odl;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opennms.integration.api.v1.graph.Edge;
 import org.opennms.integration.api.v1.graph.GraphContainer;
 import org.opennms.integration.api.v1.graph.GraphContainerInfo;
 import org.opennms.integration.api.v1.graph.GraphContainerProvider;
 import org.opennms.integration.api.v1.graph.GraphRepository;
+import org.opennms.integration.api.v1.graph.Vertex;
+import org.opennms.integration.api.v1.graph.beans.ImmutableEdge;
+import org.opennms.integration.api.v1.graph.beans.ImmutableGraph;
+import org.opennms.integration.api.v1.graph.beans.ImmutableGraphContainer;
+import org.opennms.integration.api.v1.graph.beans.ImmutableGraphInfo;
+import org.opennms.integration.api.v1.graph.beans.ImmutableVertex;
 
 public class OpendaylightGraphContainerProvider implements GraphContainerProvider {
     public static final String GRAPH_CONTAINER_ID = "ODL";
 
+    private final OpendaylightRestconfClient client;
     private final GraphRepository graphRepository;
 
-    public OpendaylightGraphContainerProvider(GraphRepository graphRepository) {
+    public OpendaylightGraphContainerProvider(OpendaylightRestconfClient client, GraphRepository graphRepository) {
+        this.client = Objects.requireNonNull(client);
         this.graphRepository = Objects.requireNonNull(graphRepository);
     }
 
     @Override
     public GraphContainer loadGraphContainer() {
-        // TODO: If we haven't saved a new one, don't bother reloading
-        return graphRepository.findContainerById(GRAPH_CONTAINER_ID);
+        // Load the topology
+        final Topology operationalTopology;
+        try {
+            operationalTopology = client.getOperationalTopology("flow:1");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        final Map<String,Vertex> verticesById = new LinkedHashMap<>();
+        for (Node node : operationalTopology.getNode()) {
+            final String nodeId = node.getNodeId().getValue();
+            final Vertex vertex = ImmutableVertex.builder()
+                    .id(nodeId)
+                    .namespace("odl")
+                    .build();
+            verticesById.put(vertex.getId(), vertex);
+        }
+
+        final List<Edge> edges = new LinkedList<>();
+        for (Link link : operationalTopology.getLink()) {
+            final String sourceId = link.getSource().getSourceNode().getValue();
+            final String targetId = link.getDestination().getDestNode().getValue();
+            final Edge edge = ImmutableEdge.builder()
+                    .id(sourceId + "->" + targetId)
+                    .namespace("odl")
+                    .source(verticesById.get(sourceId))
+                    .target(verticesById.get(targetId))
+                    .build();
+            edges.add(edge);
+        }
+
+        ImmutableGraph graph = ImmutableGraph.builder()
+                .namespace("odl")
+                .vertices(new ArrayList<>(verticesById.values()))
+                .edges(edges)
+                .build();
+
+        return ImmutableGraphContainer.builder()
+                .id("odl")
+                .label("Opendaylight")
+                .graph(graph)
+                .graphInfo(ImmutableGraphInfo.builder()
+                        .namespace("odl")
+                        .description("Opendaylight")
+                        .label("Opendaylight")
+                        .build())
+                .build();
     }
 
     @Override
     public GraphContainerInfo getContainerInfo() {
-        // FIXME: Can we find a way to only load the container info?
-        return graphRepository.findContainerById(GRAPH_CONTAINER_ID);
+        return loadGraphContainer();
     }
 }
