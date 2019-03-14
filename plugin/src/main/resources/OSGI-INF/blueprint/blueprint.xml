@@ -17,7 +17,6 @@
 
     <reference id="nodeDao" interface="org.opennms.integration.api.v1.dao.NodeDao" availability="mandatory"/>
     <reference id="requisitionRepository" interface="org.opennms.integration.api.v1.requisition.RequisitionRepository" availability="mandatory"/>
-    <reference id="graphRepository" interface="org.opennms.integration.api.v1.graph.GraphRepository" availability="mandatory"/>
     <reference id="eventSubscriptionService" interface="org.opennms.integration.api.v1.events.EventSubscriptionService" availability="mandatory"/>
 
     <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient">
@@ -46,22 +45,10 @@
         </bean>
     </service>
 
-    <service interface="org.opennms.integration.api.v1.config.poller.PollerConfigExtension">
-        <bean class="org.opennms.plugins.odl.OpendaylightPollerConfigExtension"/>
-    </service>
-
     <bean id="topologyHandler" class="org.opennms.plugins.odl.OpendaylightTopologyHandler" init-method="init" destroy-method="destroy">
         <argument index="0" ref="restconfClient"/>
         <argument index="1" ref="requisitionRepository"/>
-        <argument index="2" ref="graphRepository"/>
-        <argument index="3" ref="eventSubscriptionService"/>
+        <argument index="2" ref="eventSubscriptionService"/>
     </bean>
-
-    <service interface="org.opennms.integration.api.v1.graph.GraphContainerProvider">
-        <bean class="org.opennms.plugins.odl.OpendaylightGraphContainerProvider">
-            <argument index="0" ref="restconfClient"/>
-            <argument index="1" ref="graphRepository"/>
-        </bean>
-    </service>
 
 </blueprint>

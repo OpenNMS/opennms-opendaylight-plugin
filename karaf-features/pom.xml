@@ -81,7 +81,7 @@
                                 <feature>framework</feature>
                             </framework>
                             <features>
-                                <feature>opennms-plugins-odl</feature>
+                                <!-- <feature>opennms-plugins-odl</feature> -->
                                 <feature>my-odl-yang-support</feature>
                                 <feature>my-odl-mdsal-models</feature>
                                 <feature>netty</feature>

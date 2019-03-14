@@ -30,29 +30,36 @@ package org.opennms.plugins.odl;
 
 import java.util.Objects;
 
-import org.opennms.integration.api.v1.graph.GraphContainer;
-import org.opennms.integration.api.v1.graph.GraphContainerInfo;
-import org.opennms.integration.api.v1.graph.GraphContainerProvider;
-import org.opennms.integration.api.v1.graph.GraphRepository;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 
-public class PersistedOpendaylightGraphContainerProvider implements GraphContainerProvider {
-    public static final String GRAPH_CONTAINER_ID = "ODL";
+public class LinkProvider {
 
-    private final GraphRepository graphRepository;
+    private final OpendaylightRestconfClient client;
 
-    public PersistedOpendaylightGraphContainerProvider(GraphRepository graphRepository) {
-        this.graphRepository = Objects.requireNonNull(graphRepository);
+    public LinkProvider(OpendaylightRestconfClient client) {
+        this.client = Objects.requireNonNull(client);
     }
 
-    @Override
-    public GraphContainer loadGraphContainer() {
-        // TODO: If we haven't saved a new one, don't bother reloading
-        return graphRepository.findContainerById(GRAPH_CONTAINER_ID);
-    }
+    public void getLinks() {
 
-    @Override
-    public GraphContainerInfo getContainerInfo() {
-        // FIXME: Can we find a way to only load the container info?
-        return graphRepository.findContainerById(GRAPH_CONTAINER_ID);
+        final Topology operationalTopology;
+        try {
+            operationalTopology = client.getOperationalTopology("flow:1");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+        for (Node node : operationalTopology.getNode()) {
+            final String nodeId = node.getNodeId().getValue();
+        }
+
+        for (Link link : operationalTopology.getLink()) {
+            final String sourceId = link.getSource().getSourceNode().getValue();
+            final String targetId = link.getDestination().getDestNode().getValue();
+            final String label = sourceId + "->" + targetId;
+        }
     }
 }

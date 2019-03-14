@@ -33,8 +33,6 @@ import java.util.Objects;
 import org.opennms.integration.api.v1.config.requisition.Requisition;
 import org.opennms.integration.api.v1.events.EventListener;
 import org.opennms.integration.api.v1.events.EventSubscriptionService;
-import org.opennms.integration.api.v1.graph.GraphContainer;
-import org.opennms.integration.api.v1.graph.GraphRepository;
 import org.opennms.integration.api.v1.model.InMemoryEvent;
 import org.opennms.integration.api.v1.requisition.RequisitionRepository;
 import org.slf4j.Logger;
@@ -48,16 +46,13 @@ public class OpendaylightTopologyHandler implements EventListener {
 
     private final OpendaylightRestconfClient client;
     private final RequisitionRepository requisitionRepository;
-    private final GraphRepository graphRepository;
     private final EventSubscriptionService eventSubscriptionService;
 
     public OpendaylightTopologyHandler(OpendaylightRestconfClient client,
                                        RequisitionRepository requisitionRepository,
-                                       GraphRepository graphRepository,
                                        EventSubscriptionService eventSubscriptionService) {
         this.client = Objects.requireNonNull(client);
         this.requisitionRepository = Objects.requireNonNull(requisitionRepository);
-        this.graphRepository = Objects.requireNonNull(graphRepository);
         this.eventSubscriptionService = Objects.requireNonNull(eventSubscriptionService);
     }
 
@@ -101,10 +96,10 @@ public class OpendaylightTopologyHandler implements EventListener {
 
 
         // Build the graph
-        GraphContainer graphContainer = null; ///
+        // GraphContainer graphContainer = null; ///
 
         // Save it
-        graphRepository.save(graphContainer);
+        // graphRepository.save(graphContainer);
 
         // Done.
     }

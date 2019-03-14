@@ -113,7 +113,7 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                         .asset("building", topologyId)
                         .iface(RequisitionInterfaceBean.builder()
                                 .ipAddress(NON_RESPONSIVE_IP_ADDRESS)
-                                .monitoredService(OpendaylightPollerConfigExtension.SERVICE_NAME)
+                                .monitoredService("SDN")
                                 .build())
                         .build());
             }
