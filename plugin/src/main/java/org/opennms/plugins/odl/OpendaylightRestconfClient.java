@@ -191,6 +191,14 @@ public class OpendaylightRestconfClient {
         return responseBodyAsStr;
     }
 
+    private Response doGetWithResponse(HttpUrl httpUrl) throws IOException {
+        final Request request = new Request.Builder()
+                .url(httpUrl)
+                .get()
+                .build();
+        return okHttpClient.newCall(request).execute();
+    }
+
     public NetworkTopology getOperationalNetworkTopology() throws Exception {
         final HttpUrl httpUrl = baseUrl.newBuilder()
                 .addPathSegment("restconf")
@@ -234,9 +242,17 @@ public class OpendaylightRestconfClient {
                 .addPathSegment("node")
                 .addPathSegment(nodeId)
                 .build();
-        final String json = doGet(httpUrl);
-        final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
-        return s_nodeCodec.deserialize(node.getValue().iterator().next());
+        final Response response = doGetWithResponse(httpUrl);
+        if (response.code() == 404) {
+            return null;
+        } else if (response.isSuccessful()) {
+            final String json = doGet(httpUrl);
+            final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
+            return s_nodeCodec.deserialize(node.getValue().iterator().next());
+        } else {
+            throw new IOException(String.format("GET for URL: %s failed. Response: %s",
+                    httpUrl, response));
+        }
     }
 
     private NormalizedNode<?, ?> streamJsonToNode(String json, DataSchemaNode parentNode) {

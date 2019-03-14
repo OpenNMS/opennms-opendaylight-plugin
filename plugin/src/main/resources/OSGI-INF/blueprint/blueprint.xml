@@ -18,6 +18,7 @@
     <reference id="nodeDao" interface="org.opennms.integration.api.v1.dao.NodeDao" availability="mandatory"/>
     <reference id="requisitionRepository" interface="org.opennms.integration.api.v1.requisition.RequisitionRepository" availability="mandatory"/>
     <reference id="eventSubscriptionService" interface="org.opennms.integration.api.v1.events.EventSubscriptionService" availability="mandatory"/>
+    <reference id="eventForwarder" interface="org.opennms.integration.api.v1.events.EventForwarder" availability="mandatory"/>
 
     <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient" destroy-method="destroy">
         <argument index="0" value="${controllerUrl}" />
@@ -31,12 +32,11 @@
         </bean>
     </service>
 
-    <service interface="org.opennms.integration.api.v1.pollers.ServicePollerFactory">
-        <bean class="org.opennms.plugins.odl.OpendaylightServicePollerFactory">
-            <argument index="0" ref="restconfClient"/>
-            <argument index="1" ref="nodeDao"/>
-        </bean>
-    </service>
+    <bean id="servicePollerFactory" class="org.opennms.plugins.odl.OpendaylightServicePollerFactory">
+        <argument index="0" ref="restconfClient"/>
+        <argument index="1" ref="nodeDao"/>
+    </bean>
+    <service ref="servicePollerFactory" interface="org.opennms.integration.api.v1.pollers.ServicePollerFactory"/>
 
     <service interface="org.opennms.integration.api.v1.requisition.RequisitionProvider">
         <bean class="org.opennms.plugins.odl.OpendaylightRequisitionProvider">
@@ -49,6 +49,17 @@
         <argument index="0" ref="restconfClient"/>
         <argument index="1" ref="requisitionRepository"/>
         <argument index="2" ref="eventSubscriptionService"/>
+    </bean>
+
+    <service interface="org.opennms.integration.api.v1.config.events.EventConfExtension">
+        <bean class="org.opennms.plugins.odl.OpendaylightEventConfExtension"/>
+    </service>
+
+    <bean id="eventGenerator" class="org.opennms.plugins.odl.OpendaylightEventGenerator" init-method="init" destroy-method="destroy">
+        <argument index="0" ref="restconfClient"/>
+        <argument index="1" ref="eventForwarder"/>
+        <argument index="2" ref="nodeDao"/>
+        <argument index="3" ref="servicePollerFactory"/>
     </bean>
 
 </blueprint>

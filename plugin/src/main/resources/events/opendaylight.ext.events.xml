@@ -1,0 +1,19 @@
+<events xmlns="http://xmlns.opennms.org/xsd/eventconf">
+    <event>
+        <uei>uei.opennms.org/opendaylight/nodeLostFromOperationalTopology</uei>
+        <event-label>ODL: Node lost from operational topology</event-label>
+        <descr>The node %nodelabel% was lost from the operational topology.</descr>
+        <logmsg dest="logndisplay">Node lost from operational topology</logmsg>
+        <severity>Minor</severity>
+        <alarm-data reduction-key="%uei%:%dpname%:%nodeid%" alarm-type="1" />
+    </event>
+
+    <event>
+        <uei>uei.opennms.org/opendaylight/nodeGainedInOperationalTopology</uei>
+        <event-label>ODL: Node grained in operational topology</event-label>
+        <descr>The node %nodelabel% was gained in the operational topology.</descr>
+        <logmsg dest="logndisplay">Node gained in the operational topology</logmsg>
+        <severity>Normal</severity>
+        <alarm-data reduction-key="%uei%:%dpname%:%nodeid%" alarm-type="2" clear-key="uei.opennms.org/opendaylight/nodeLostFromOperationalTopology:%dpname%:%nodeid%"/>
+    </event>
+</events>

@@ -69,8 +69,7 @@ public class OpendaylightServicePoller implements ServicePoller {
 
         try {
             LOG.debug("Attempting to retrieve node with ID: {} from operational topology with ID: {}", odlNodeId, odlTopologyId);
-            Node odlNode = client.getNodeFromOperationalTopology(odlTopologyId, odlNodeId);
-            LOG.debug("Retrieved node: {}", odlNode);
+            Node odlNode = getNodeFromOperationalTopology(node);
             if (odlNode == null) {
                 return CompletableFuture.completedFuture(new PollerResultBean(Status.Down, "Node was not found in operational topology."));
             }
@@ -78,6 +77,18 @@ public class OpendaylightServicePoller implements ServicePoller {
         } catch (Exception e) {
             return CompletableFuture.completedFuture(new PollerResultBean(e));
         }
+    }
+
+    public Node getNodeFromOperationalTopology(org.opennms.integration.api.v1.model.Node node) throws Exception {
+        String foreignId = node.getForeignId();
+        String odlTopologyId = node.getAssetRecord().getBuilding();
+        String odlNodeId = NamingUtils.getNodeIdFromForeignId(foreignId);
+
+        LOG.debug("Attempting to retrieve node with ID: {} from operational topology with ID: {}", odlNodeId, odlTopologyId);
+        Node odlNode = client.getNodeFromOperationalTopology(odlTopologyId, odlNodeId);
+        LOG.debug("Successfully retrieved node.");
+        LOG.trace("Node: {}", odlNode);
+        return odlNode;
     }
 
 }
