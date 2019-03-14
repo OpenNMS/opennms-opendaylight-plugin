@@ -19,7 +19,7 @@
     <reference id="requisitionRepository" interface="org.opennms.integration.api.v1.requisition.RequisitionRepository" availability="mandatory"/>
     <reference id="eventSubscriptionService" interface="org.opennms.integration.api.v1.events.EventSubscriptionService" availability="mandatory"/>
 
-    <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient">
+    <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient" destroy-method="destroy">
         <argument index="0" value="${controllerUrl}" />
         <argument index="1" value="${username}" />
         <argument index="2" value="${password}" />

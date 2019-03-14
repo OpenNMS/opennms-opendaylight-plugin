@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<notification xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0">
+    <eventTime>2019-03-14T12:08:57.367-04:00</eventTime>
+    <data-changed-notification xmlns="urn:opendaylight:params:xml:ns:yang:controller:md:sal:remote">
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']</path>
+            <operation>updated</operation>
+            <data>
+                <topology xmlns="urn:TBD:params:xml:ns:yang:network-topology">
+                    <topology-id>flow:1</topology-id>
+                    <node>
+                        <node-id>host:8e:df:31:b9:4b:15</node-id>
+                        <attachment-points xmlns="urn:opendaylight:host-tracker">
+                            <tp-id>openflow:2:1</tp-id>
+                            <corresponding-tp>host:8e:df:31:b9:4b:15</corresponding-tp>
+                            <active>true</active>
+                        </attachment-points>
+                        <id xmlns="urn:opendaylight:host-tracker">8e:df:31:b9:4b:15</id>
+                        <addresses xmlns="urn:opendaylight:host-tracker">
+                            <id>2</id>
+                            <mac>8e:df:31:b9:4b:15</mac>
+                            <first-seen>1552533259280</first-seen>
+                            <last-seen>1552579195660</last-seen>
+                            <ip>10.0.0.1</ip>
+                        </addresses>
+                        <termination-point>
+                            <tp-id>host:8e:df:31:b9:4b:15</tp-id>
+                        </termination-point>
+                    </node>
+                    <node>
+                        <node-id>host:1a:45:61:64:fc:3d</node-id>
+                        <attachment-points xmlns="urn:opendaylight:host-tracker">
+                            <tp-id>openflow:3:1</tp-id>
+                            <corresponding-tp>host:1a:45:61:64:fc:3d</corresponding-tp>
+                            <active>true</active>
+                        </attachment-points>
+                        <id xmlns="urn:opendaylight:host-tracker">1a:45:61:64:fc:3d</id>
+                        <addresses xmlns="urn:opendaylight:host-tracker">
+                            <id>0</id>
+                            <mac>1a:45:61:64:fc:3d</mac>
+                            <first-seen>1552533259250</first-seen>
+                            <last-seen>1552579195656</last-seen>
+                            <ip>10.0.0.3</ip>
+                        </addresses>
+                        <termination-point>
+                            <tp-id>host:1a:45:61:64:fc:3d</tp-id>
+                        </termination-point>
+                    </node>
+                    <node>
+                        <node-id>openflow:1</node-id>
+                        <inventory-node-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:1']</inventory-node-ref>
+                        <termination-point>
+                            <tp-id>openflow:1:LOCAL</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:1']/a:node-connector[a:id='openflow:1:LOCAL']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:1:2</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:1']/a:node-connector[a:id='openflow:1:2']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:1:1</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:1']/a:node-connector[a:id='openflow:1:1']</inventory-node-connector-ref>
+                        </termination-point>
+                    </node>
+                    <node>
+                        <node-id>openflow:2</node-id>
+                        <inventory-node-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:2']</inventory-node-ref>
+                        <termination-point>
+                            <tp-id>openflow:2:3</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:3']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:2:2</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:2']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:2:1</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:1']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:2:LOCAL</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:2']/a:node-connector[a:id='openflow:2:LOCAL']</inventory-node-connector-ref>
+                        </termination-point>
+                    </node>
+                    <node>
+                        <node-id>openflow:3</node-id>
+                        <inventory-node-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:3']</inventory-node-ref>
+                        <termination-point>
+                            <tp-id>openflow:3:2</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:2']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:3:1</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:1']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:3:LOCAL</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:LOCAL']</inventory-node-connector-ref>
+                        </termination-point>
+                        <termination-point>
+                            <tp-id>openflow:3:3</tp-id>
+                            <inventory-node-connector-ref xmlns:a="urn:opendaylight:inventory" xmlns="urn:opendaylight:model:topology:inventory">/a:nodes/a:node[a:id='openflow:3']/a:node-connector[a:id='openflow:3:3']</inventory-node-connector-ref>
+                        </termination-point>
+                    </node>
+                    <node>
+                        <node-id>host:fe:5a:20:21:59:b9</node-id>
+                        <attachment-points xmlns="urn:opendaylight:host-tracker">
+                            <tp-id>openflow:3:2</tp-id>
+                            <corresponding-tp>host:fe:5a:20:21:59:b9</corresponding-tp>
+                            <active>true</active>
+                        </attachment-points>
+                        <id xmlns="urn:opendaylight:host-tracker">fe:5a:20:21:59:b9</id>
+                        <addresses xmlns="urn:opendaylight:host-tracker">
+                            <id>3</id>
+                            <mac>fe:5a:20:21:59:b9</mac>
+                            <first-seen>1552533259314</first-seen>
+                            <last-seen>1552579195631</last-seen>
+                            <ip>10.0.0.4</ip>
+                        </addresses>
+                        <termination-point>
+                            <tp-id>host:fe:5a:20:21:59:b9</tp-id>
+                        </termination-point>
+                    </node>
+                    <node>
+                        <node-id>host:ba:fb:87:14:0c:1a</node-id>
+                        <attachment-points xmlns="urn:opendaylight:host-tracker">
+                            <tp-id>openflow:2:2</tp-id>
+                            <corresponding-tp>host:ba:fb:87:14:0c:1a</corresponding-tp>
+                            <active>true</active>
+                        </attachment-points>
+                        <id xmlns="urn:opendaylight:host-tracker">ba:fb:87:14:0c:1a</id>
+                        <addresses xmlns="urn:opendaylight:host-tracker">
+                            <id>1</id>
+                            <mac>ba:fb:87:14:0c:1a</mac>
+                            <first-seen>1552533259279</first-seen>
+                            <last-seen>1552579195662</last-seen>
+                            <ip>10.0.0.2</ip>
+                        </addresses>
+                        <termination-point>
+                            <tp-id>host:ba:fb:87:14:0c:1a</tp-id>
+                        </termination-point>
+                    </node>
+                    <link>
+                        <link-id>host:ba:fb:87:14:0c:1a/openflow:2:2</link-id>
+                        <source>
+                            <source-tp>host:ba:fb:87:14:0c:1a</source-tp>
+                            <source-node>host:ba:fb:87:14:0c:1a</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:2:2</dest-tp>
+                            <dest-node>openflow:2</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:2:1/host:8e:df:31:b9:4b:15</link-id>
+                        <source>
+                            <source-tp>openflow:2:1</source-tp>
+                            <source-node>openflow:2</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>host:8e:df:31:b9:4b:15</dest-tp>
+                            <dest-node>host:8e:df:31:b9:4b:15</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:2:2/host:ba:fb:87:14:0c:1a</link-id>
+                        <source>
+                            <source-tp>openflow:2:2</source-tp>
+                            <source-node>openflow:2</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>host:ba:fb:87:14:0c:1a</dest-tp>
+                            <dest-node>host:ba:fb:87:14:0c:1a</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:3:1/host:1a:45:61:64:fc:3d</link-id>
+                        <source>
+                            <source-tp>openflow:3:1</source-tp>
+                            <source-node>openflow:3</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>host:1a:45:61:64:fc:3d</dest-tp>
+                            <dest-node>host:1a:45:61:64:fc:3d</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>host:1a:45:61:64:fc:3d/openflow:3:1</link-id>
+                        <source>
+                            <source-tp>host:1a:45:61:64:fc:3d</source-tp>
+                            <source-node>host:1a:45:61:64:fc:3d</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:3:1</dest-tp>
+                            <dest-node>openflow:3</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>host:fe:5a:20:21:59:b9/openflow:3:2</link-id>
+                        <source>
+                            <source-tp>host:fe:5a:20:21:59:b9</source-tp>
+                            <source-node>host:fe:5a:20:21:59:b9</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:3:2</dest-tp>
+                            <dest-node>openflow:3</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>host:8e:df:31:b9:4b:15/openflow:2:1</link-id>
+                        <source>
+                            <source-tp>host:8e:df:31:b9:4b:15</source-tp>
+                            <source-node>host:8e:df:31:b9:4b:15</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:2:1</dest-tp>
+                            <dest-node>openflow:2</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:1:1</link-id>
+                        <source>
+                            <source-tp>openflow:1:1</source-tp>
+                            <source-node>openflow:1</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:2:3</dest-tp>
+                            <dest-node>openflow:2</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:3:2/host:fe:5a:20:21:59:b9</link-id>
+                        <source>
+                            <source-tp>openflow:3:2</source-tp>
+                            <source-node>openflow:3</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>host:fe:5a:20:21:59:b9</dest-tp>
+                            <dest-node>host:fe:5a:20:21:59:b9</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:3:3</link-id>
+                        <source>
+                            <source-tp>openflow:3:3</source-tp>
+                            <source-node>openflow:3</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:1:2</dest-tp>
+                            <dest-node>openflow:1</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:2:3</link-id>
+                        <source>
+                            <source-tp>openflow:2:3</source-tp>
+                            <source-node>openflow:2</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:1:1</dest-tp>
+                            <dest-node>openflow:1</dest-node>
+                        </destination>
+                    </link>
+                    <link>
+                        <link-id>openflow:1:2</link-id>
+                        <source>
+                            <source-tp>openflow:1:2</source-tp>
+                            <source-node>openflow:1</source-node>
+                        </source>
+                        <destination>
+                            <dest-tp>openflow:3:3</dest-tp>
+                            <dest-node>openflow:3</dest-node>
+                        </destination>
+                    </link>
+                </topology>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']</path>
+            <operation>updated</operation>
+            <data>
+                <link xmlns="urn:TBD:params:xml:ns:yang:network-topology">
+                    <link-id>openflow:3:3</link-id>
+                    <source>
+                        <source-tp>openflow:3:3</source-tp>
+                        <source-node>openflow:3</source-node>
+                    </source>
+                    <destination>
+                        <dest-tp>openflow:1:2</dest-tp>
+                        <dest-node>openflow:1</dest-node>
+                    </destination>
+                </link>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:source</path>
+            <operation>updated</operation>
+            <data>
+                <source xmlns="urn:TBD:params:xml:ns:yang:network-topology">
+                    <source-tp>openflow:3:3</source-tp>
+                    <source-node>openflow:3</source-node>
+                </source>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:source/network-topology:source-tp</path>
+            <operation>updated</operation>
+            <data>
+                <source-tp xmlns="urn:TBD:params:xml:ns:yang:network-topology">openflow:3:3</source-tp>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:source/network-topology:source-node</path>
+            <operation>updated</operation>
+            <data>
+                <source-node xmlns="urn:TBD:params:xml:ns:yang:network-topology">openflow:3</source-node>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:destination</path>
+            <operation>updated</operation>
+            <data>
+                <destination xmlns="urn:TBD:params:xml:ns:yang:network-topology">
+                    <dest-tp>openflow:1:2</dest-tp>
+                    <dest-node>openflow:1</dest-node>
+                </destination>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:destination/network-topology:dest-tp</path>
+            <operation>updated</operation>
+            <data>
+                <dest-tp xmlns="urn:TBD:params:xml:ns:yang:network-topology">openflow:1:2</dest-tp>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:destination/network-topology:dest-node</path>
+            <operation>updated</operation>
+            <data>
+                <dest-node xmlns="urn:TBD:params:xml:ns:yang:network-topology">openflow:1</dest-node>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:link[network-topology:link-id='openflow:3:3']/network-topology:link-id</path>
+            <operation>updated</operation>
+            <data>
+                <link-id xmlns="urn:TBD:params:xml:ns:yang:network-topology">openflow:3:3</link-id>
+            </data>
+        </data-change-event>
+        <data-change-event>
+            <path>/network-topology:network-topology/network-topology:topology[network-topology:topology-id='flow:1']/network-topology:topology-id</path>
+            <operation>updated</operation>
+            <data>
+                <topology-id xmlns="urn:TBD:params:xml:ns:yang:network-topology">flow:1</topology-id>
+            </data>
+        </data-change-event>
+    </data-changed-notification>
+</notification>

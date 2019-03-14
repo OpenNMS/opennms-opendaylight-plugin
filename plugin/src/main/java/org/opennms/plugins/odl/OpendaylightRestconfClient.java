@@ -32,6 +32,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import javax.annotation.Nullable;
 
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingCodecTreeNode;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.StreamWriterGenerator;
@@ -57,15 +60,21 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 import javassist.ClassPool;
 import okhttp3.Credentials;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
@@ -73,8 +82,6 @@ import okhttp3.logging.HttpLoggingInterceptor;
  *
  * Uses Opendaylight's YANG tools for serializing/deserializing POJOs
  * to and from JSON.
- *
- * TODO: Move away from apache httpclient to avoid bundle reloading issues.
  *
  * @author jwhite
  */
@@ -114,6 +121,7 @@ public class OpendaylightRestconfClient {
         s_networkTopologyCodec = registry.getCodecContext().getSubtreeCodec(InstanceIdentifier.create(NetworkTopology.class));
         s_topologyCodec = s_networkTopologyCodec.streamChild(Topology.class);
         s_nodeCodec = s_topologyCodec.streamChild(Node.class);
+
 
         s_networkTopologySchemaNode = s_schemaContext.getDataChildByName(NetworkTopology.QNAME);
         s_topologySchemaNode = ((DataNodeContainer)s_networkTopologySchemaNode).getDataChildByName(Topology.QNAME);
@@ -157,23 +165,30 @@ public class OpendaylightRestconfClient {
         okHttpClient = clientBuilder.build();
     }
 
+    public void destroy() {
+        // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
+        okHttpClient.dispatcher().executorService().shutdown();
+    }
+
     private String doGet(HttpUrl httpUrl) throws IOException {
         final Request request = new Request.Builder()
                 .url(httpUrl)
                 .get()
                 .build();
         final Response response = okHttpClient.newCall(request).execute();
+
+        final ResponseBody responseBody = response.body();
+        String responseBodyAsStr = null;
+        if (responseBody != null) {
+            responseBodyAsStr = responseBody.string();
+        }
+
         if (!response.isSuccessful()) {
-            throw new IOException(String.format("GET for URL: %s failed. Response: %s",
-                    httpUrl, response));
+            throw new IOException(String.format("GET for URL: %s failed. Response: %s Body: %s",
+                    httpUrl, response, responseBodyAsStr));
         }
-        final ResponseBody body = response.body();
-        if (body != null) {
-            return body.string();
-        } else {
-            throw new IOException(String.format("No response body on GET request to: %s. Response: %s",
-                    httpUrl, response));
-        }
+
+        return responseBodyAsStr;
     }
 
     public NetworkTopology getOperationalNetworkTopology() throws Exception {
@@ -233,4 +248,134 @@ public class OpendaylightRestconfClient {
 
         return result.getResult();
     }
+
+    /**
+     * @param path the path
+     * @param datastore CONFIGURATION or OPERATIONAL
+     * @param scope BASE, ONE, or SUBTREE
+     * @return
+     * @throws IOException
+     */
+    protected String getStreamName(String path, String datastore, String scope) throws IOException {
+        final HttpUrl httpUrl = baseUrl.newBuilder()
+                .addPathSegment("restconf")
+                .addPathSegment("operations")
+                .addPathSegment("sal-remote:create-data-change-event-subscription")
+                .build();
+        final RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"),
+                "{\n" +
+                        "    \"input\": {\n" +
+                        "        \"path\": \"" + path + "\",\n" +
+                        "        \"sal-remote-augment:datastore\": \"" + datastore + "\",\n" +
+                        "        \"sal-remote-augment:scope\": \""+ scope + "\"\n" +
+                        "    }\n" +
+                        "}");
+        final String jsonResponse = doPost(httpUrl, requestBody);
+        // We expect the response to look like:
+        //  {"output":{"stream-name":"data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE"}}
+        LOG.debug("Got response: {}", jsonResponse);
+
+        final JsonParser jp = new JsonParser();
+        final JsonElement root = jp.parse(jsonResponse);
+        final String streamName = root.getAsJsonObject()
+                .getAsJsonObject("output")
+                .getAsJsonPrimitive("stream-name")
+                .getAsString();
+        LOG.debug("Found stream name: {}", streamName);
+
+        return streamName;
+    }
+
+    protected String subscribeToStream(String streamName) throws IOException {
+        final HttpUrl httpUrl = baseUrl.newBuilder()
+                .addPathSegment("restconf")
+                .addPathSegment("streams")
+                .addPathSegment("stream")
+                // The stream name is already URL encoded, ensure we don't re-encode it
+                .addEncodedPathSegments(streamName)
+                .build();
+        final String jsonResponse = doGet(httpUrl);
+        // We expect the response to look like:
+        // {"location":"ws://localhost:8185/data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE"}
+        LOG.debug("Got response: {}", jsonResponse);
+
+        final JsonParser jp = new JsonParser();
+        final JsonElement root = jp.parse(jsonResponse);
+        final String wsUrl = root.getAsJsonObject()
+                .getAsJsonPrimitive("location")
+                .getAsString();
+        LOG.debug("Found URL: {}", wsUrl);
+
+        return wsUrl;
+    }
+
+    public WebSocket streamChangesForTopology(String topologyId, Consumer<String> consumer) throws IOException {
+        return streamChanges(String.format("/network-topology:network-topology/network-topology:topology[network-topology:topology-id='%s']", topologyId),
+                "OPERATIONAL","SUBTREE", consumer);
+    }
+
+    public WebSocket streamChanges(String path, String datastore, String scope, Consumer<String> consumer) throws IOException {
+        // See https://wiki.opendaylight.org/view/OpenDaylight_Controller:MD-SAL:Restconf:Change_event_notification_subscription
+        final String streamName = getStreamName(path, datastore, scope);
+        final String wsUrl = subscribeToStream(streamName);
+
+        final ChangeEventWSListener listener = new ChangeEventWSListener(consumer);
+        Request request = new Request.Builder()
+                .url(wsUrl)
+                .build();
+        return okHttpClient.newWebSocket(request, listener);
+    }
+
+    private String doPost(HttpUrl httpUrl, RequestBody requestBody) throws IOException {
+        final Request request = new Request.Builder()
+                .url(httpUrl)
+                .post(requestBody)
+                .addHeader("Accept", "application/json")
+                .build();
+        final Response response = okHttpClient.newCall(request).execute();
+
+        final ResponseBody responseBody = response.body();
+        String responseBodyAsStr = null;
+        if (responseBody != null) {
+            responseBodyAsStr = responseBody.string();
+        }
+
+        if (!response.isSuccessful()) {
+            throw new IOException(String.format("GET for URL: %s failed. Response: %s Body: %s",
+                    httpUrl, response, responseBodyAsStr));
+        }
+        return responseBodyAsStr;
+    }
+
+    private static class ChangeEventWSListener extends WebSocketListener {
+        private static final Logger LOG = LoggerFactory.getLogger(ChangeEventWSListener.class);
+        private final Consumer<String> consumer;
+
+        public ChangeEventWSListener(Consumer<String> consumer) {
+            this.consumer = Objects.requireNonNull(consumer);
+        }
+
+        @Override
+        public void onOpen(WebSocket webSocket, Response response) {
+            LOG.debug("Websocket is open.");
+        }
+
+        @Override
+        public void onMessage(WebSocket webSocket, String text) {
+            // Notifications are always in XML format
+            LOG.debug("Received message.");
+            consumer.accept(text);
+        }
+
+        @Override
+        public void onClosed(WebSocket webSocket, int code, String reason) {
+            LOG.debug("Websocket is closed.");
+        }
+
+        @Override
+        public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
+            LOG.warn("Websocket failure.", t);
+        }
+    }
+
 }

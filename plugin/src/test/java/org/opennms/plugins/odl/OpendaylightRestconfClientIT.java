@@ -30,6 +30,7 @@ package org.opennms.plugins.odl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
@@ -110,5 +111,36 @@ public class OpendaylightRestconfClientIT {
 
         // Verify
         assertEquals("openflow:1", node.getNodeId().getValue());
+    }
+
+    @Test
+    public void canGetStreamName() throws Exception {
+        stubFor(post(urlEqualTo("/restconf/operations/sal-remote:create-data-change-event-subscription"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "Content-Type: application/json; charset=utf-8")
+                        .withBody("{\"output\":{\"stream-name\":\"data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE\"}}")));
+
+        // Make the call
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient(String.format("http://localhost:%s", wireMockRule.port()));
+        String streamName= client.getStreamName("opendaylight-inventory:nodes","CONFIGURATION", "BASE");
+
+        // Verify
+        assertEquals("data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE", streamName);
+
+    }
+
+    @Test
+    public void canSubscribeToStream() throws Exception {
+        stubFor(get(urlEqualTo("/restconf/streams/stream/data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "Content-Type: application/json; charset=utf-8")
+                        .withBody("{\"location\":\"ws://localhost:8185/data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE\"}")));
+
+        // Make the call
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient(String.format("http://localhost:%s", wireMockRule.port()));
+        String wsUrl = client.subscribeToStream("data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE");
+
+        // Verify
+        assertEquals("ws://localhost:8185/data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE", wsUrl);
     }
 }
