@@ -180,7 +180,11 @@ public class OpendaylightRestconfClient {
         final ResponseBody responseBody = response.body();
         String responseBodyAsStr = null;
         if (responseBody != null) {
-            responseBodyAsStr = responseBody.string();
+            try {
+                responseBodyAsStr = responseBody.string();
+            } finally {
+                responseBody.close();
+            }
         }
 
         if (!response.isSuccessful()) {
@@ -246,9 +250,19 @@ public class OpendaylightRestconfClient {
         if (response.code() == 404) {
             return null;
         } else if (response.isSuccessful()) {
-            final String json = doGet(httpUrl);
-            final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
-            return s_nodeCodec.deserialize(node.getValue().iterator().next());
+            final ResponseBody body = response.body();
+            if (body != null) {
+                try {
+                    final String json = body.string();
+                    final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
+                    return s_nodeCodec.deserialize(node.getValue().iterator().next());
+                } finally {
+                    body.close();
+                }
+            } else {
+                throw new IOException(String.format("Response was successful, but got empty body for URL: %s",
+                        httpUrl));
+            }
         } else {
             throw new IOException(String.format("GET for URL: %s failed. Response: %s",
                     httpUrl, response));
@@ -353,7 +367,11 @@ public class OpendaylightRestconfClient {
         final ResponseBody responseBody = response.body();
         String responseBodyAsStr = null;
         if (responseBody != null) {
-            responseBodyAsStr = responseBody.string();
+            try {
+                responseBodyAsStr = responseBody.string();
+            } finally {
+                responseBody.close();
+            }
         }
 
         if (!response.isSuccessful()) {

@@ -31,7 +31,7 @@ package org.opennms.plugins.odl;
 public class EventConstants {
 
     public static final String SOURCE = "odl-plugin";
-    public static final String NODE_LOST_UEI = "uei.opennms.org/opendaylight/nodeLostFromOperationalTopology";
-    public static final String NODE_GAINED_UEI = "uei.opennms.org/opendaylight/nodeGainedInOperationalTopology";
+    public static final String NODE_OFFLINE_UEI = "uei.opennms.org/opendaylight/nodeOfflineInOperationalTopology";
+    public static final String NODE_ONLINE_UEI = "uei.opennms.org/opendaylight/nodeOnlineInOperationalTopology";
 
 }

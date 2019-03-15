@@ -29,8 +29,9 @@
 package org.opennms.plugins.odl;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
@@ -47,6 +48,9 @@ public class OpendaylightEventGenerator implements Runnable {
 
     private static final int REFRESH_PERIOD_MS = 30000;
     private static final int MIN_REFRESH_DELAY_MS = 5000;
+
+    // TODO: Use cache instead - entries should eventually expire
+    private final Map<Integer,Boolean> lastStatusByNodeId = new HashMap<>();
 
     private final OpendaylightRestconfClient client;
     private final EventForwarder eventForwarder;
@@ -118,24 +122,32 @@ public class OpendaylightEventGenerator implements Runnable {
     private void refreshNodeState(org.opennms.integration.api.v1.model.Node node) throws Exception {
         final OpendaylightServicePoller poller = opendaylightServicePollerFactory.createPoller();
         final Node topologyNode = poller.getNodeFromOperationalTopology(node);
-        if (topologyNode == null) {
-            LOG.info("Sending offline event for: {}", node.getForeignId());
-            sendOfflineEvent(node);
+
+        final boolean isOnline = topologyNode != null;
+        final Boolean lastStatus = lastStatusByNodeId.get(node.getId());
+        if (lastStatus == null || isOnline != lastStatus) {
+            if (isOnline) {
+                LOG.info("Sending online event for: {} with id: {}", node.getForeignId(), node.getId());
+                sendOnlineEvent(node);
+            } else {
+                LOG.info("Sending offline event for: {} with id: {}", node.getForeignId(), node.getId());
+                sendOfflineEvent(node);
+            }
+            lastStatusByNodeId.put(node.getId(), isOnline);
         } else {
-            LOG.info("Sending online event for: {}", node.getForeignId());
-            sendOnlineEvent(node);
+            LOG.debug("Suppressing event for: {} status is the same: {}", node.getForeignId(), isOnline);
         }
     }
 
     private void sendOfflineEvent(org.opennms.integration.api.v1.model.Node node) {
-        InMemoryEventBean event = new InMemoryEventBean(EventConstants.NODE_LOST_UEI, EventConstants.SOURCE);
-        event.addParameter("nodeid", Integer.toString(node.getId()));
+        InMemoryEventBean event = new InMemoryEventBean(EventConstants.NODE_OFFLINE_UEI, EventConstants.SOURCE);
+        event.setNodeId(node.getId());
         eventForwarder.sendAsync(event);
     }
 
     private void sendOnlineEvent(org.opennms.integration.api.v1.model.Node node) {
-        InMemoryEventBean event = new InMemoryEventBean(EventConstants.NODE_GAINED_UEI, EventConstants.SOURCE);
-        event.addParameter("nodeid", Integer.toString(node.getId()));
+        InMemoryEventBean event = new InMemoryEventBean(EventConstants.NODE_ONLINE_UEI, EventConstants.SOURCE);
+        event.setNodeId(node.getId());
         eventForwarder.sendAsync(event);
     }
 
