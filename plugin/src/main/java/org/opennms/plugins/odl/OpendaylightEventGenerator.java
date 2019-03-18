@@ -92,6 +92,7 @@ public class OpendaylightEventGenerator implements Runnable {
         }
         if (thread != null) {
             exiting.set(true);
+            thread.interrupt();
             thread.join();
         }
     }
@@ -115,6 +116,7 @@ public class OpendaylightEventGenerator implements Runnable {
                 }
             } catch (InterruptedException e) {
                 LOG.info("Interrupted. Exiting.");
+                return;
             }
         }
     }
