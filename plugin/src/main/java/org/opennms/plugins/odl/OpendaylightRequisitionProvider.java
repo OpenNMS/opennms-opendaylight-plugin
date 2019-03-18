@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 public class OpendaylightRequisitionProvider implements RequisitionProvider {
     private static final Logger LOG = LoggerFactory.getLogger(OpendaylightRestconfClient.class);
     private static final String TYPE = "opendaylight";
+    public static final String DEFAULT_FOREIGN_SOURCE = "ODL";
 
     // TODO: Make this configurable
     public static final InetAddress NON_RESPONSIVE_IP_ADDRESS;
@@ -90,10 +91,10 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
         }
 
         // TODO: Load existing requisition instead of starting from scracth?
-        requisitionRepository.getDeployedRequisition("ODL");
+        requisitionRepository.getDeployedRequisition(DEFAULT_FOREIGN_SOURCE);
 
         final RequisitionBean.Builder requisitionBuilder = RequisitionBean.builder()
-                .foreignSource("ODL");
+                .foreignSource(DEFAULT_FOREIGN_SOURCE);
 
         for (Topology topology : networkTopology.getTopology()) {
             if (topology.getNode() == null) {
