@@ -63,9 +63,9 @@ public class OpendaylightServicePoller implements ServicePoller {
             return CompletableFuture.completedFuture(new PollerResultBean(Status.Down, "No matching node found!"));
         }
 
-        String foreignId = node.getForeignId();
-        String odlTopologyId = node.getAssetRecord().getBuilding();
-        String odlNodeId = NamingUtils.getNodeIdFromForeignId(foreignId);
+        final OdlMetadata odlMetadata = new OdlMetadata(node);
+        final String odlTopologyId = odlMetadata.getTopologyId();
+        final String odlNodeId = odlMetadata.getNodeId();
 
         try {
             LOG.debug("Attempting to retrieve node with ID: {} from operational topology with ID: {}", odlNodeId, odlTopologyId);
@@ -80,12 +80,12 @@ public class OpendaylightServicePoller implements ServicePoller {
     }
 
     public Node getNodeFromOperationalTopology(org.opennms.integration.api.v1.model.Node node) throws Exception {
-        String foreignId = node.getForeignId();
-        String odlTopologyId = node.getAssetRecord().getBuilding();
-        String odlNodeId = NamingUtils.getNodeIdFromForeignId(foreignId);
+        final OdlMetadata odlMetadata = new OdlMetadata(node);
+        final String odlTopologyId = odlMetadata.getTopologyId();
+        final String odlNodeId = odlMetadata.getNodeId();
 
         LOG.debug("Attempting to retrieve node with ID: {} from operational topology with ID: {}", odlNodeId, odlTopologyId);
-        Node odlNode = client.getNodeFromOperationalTopology(odlTopologyId, odlNodeId);
+        final Node odlNode = client.getNodeFromOperationalTopology(odlTopologyId, odlNodeId);
         LOG.debug("Successfully retrieved node.");
         LOG.trace("Node: {}", odlNode);
         return odlNode;

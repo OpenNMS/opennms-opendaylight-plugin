@@ -28,6 +28,9 @@
 
 package org.opennms.plugins.odl;
 
+import static org.opennms.plugins.odl.OdlMetadata.NODE_ID_KEY;
+import static org.opennms.plugins.odl.OdlMetadata.TOPOLOGY_ID_KEY;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
@@ -50,6 +53,7 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
     private static final Logger LOG = LoggerFactory.getLogger(OpendaylightRestconfClient.class);
     private static final String TYPE = "opendaylight";
     public static final String DEFAULT_FOREIGN_SOURCE = "ODL";
+    public static final String METADATA_CONTEXT_ID = "ODL";
 
     // TODO: Make this configurable
     public static final InetAddress NON_RESPONSIVE_IP_ADDRESS;
@@ -111,7 +115,8 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                 requisitionBuilder.node(RequisitionNodeBean.builder()
                         .foreignId(foreignId)
                         .nodeLabel(nodeId)
-                        .asset("building", topologyId)
+                        .metaData(METADATA_CONTEXT_ID, NODE_ID_KEY, nodeId)
+                        .metaData(METADATA_CONTEXT_ID, TOPOLOGY_ID_KEY, topologyId)
                         .iface(RequisitionInterfaceBean.builder()
                                 .ipAddress(NON_RESPONSIVE_IP_ADDRESS)
                                 .monitoredService("SDN")

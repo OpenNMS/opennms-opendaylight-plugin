@@ -88,6 +88,8 @@
         <bundle>mvn:org.opendaylight.openflowplugin.model/model-flow-base/0.6.4</bundle>
         <bundle>mvn:org.opendaylight.openflowplugin.openflowjava/openflow-protocol-api/0.6.4</bundle>
         <bundle>mvn:org.opendaylight.openflowplugin.model/model-flow-service/0.6.4</bundle>
+        <bundle>mvn:org.opendaylight.openflowplugin.model/model-flow-statistics/0.6.4</bundle>
+        <bundle>mvn:org.opendaylight.l2switch.loopremover/loopremover-model/0.7.4</bundle>
     </feature>
 
     <feature name="netty" description="Netty" version="4.1.30.Final">

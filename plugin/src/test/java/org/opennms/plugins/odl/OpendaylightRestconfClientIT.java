@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowNode;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
@@ -142,5 +144,24 @@ public class OpendaylightRestconfClientIT {
 
         // Verify
         assertEquals("ws://localhost:8185/data-change-event-subscription/opendaylight-inventory:nodes/datastore=CONFIGURATION/scope=BASE", wsUrl);
+    }
+
+    @Test
+    public void canRetrieveNodeFromInventory() throws Exception {
+        stubFor(get(urlEqualTo("/restconf/operational/opendaylight-inventory:nodes/node/openflow:4"))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "Content-Type: application/yang.data+json; charset=utf-8")
+                        .withBodyFile("operational-inventory-node.json")));
+
+        // Make the call
+        OpendaylightRestconfClient client = new OpendaylightRestconfClient(String.format("http://localhost:%s", wireMockRule.port()));
+        org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node node = client.getNodeFromOperationalInventory("openflow:4");
+
+        // Verify
+        assertEquals("openflow:4", node.getId().getValue());
+
+        FlowCapableNode flowCapableNode = node.getAugmentation(FlowCapableNode.class);
+        assertEquals("Open vSwitch", flowCapableNode.getHardware());
+
     }
 }

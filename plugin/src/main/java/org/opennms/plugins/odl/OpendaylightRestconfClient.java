@@ -42,12 +42,14 @@ import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecR
 import org.opendaylight.mdsal.binding.generator.impl.ModuleInfoBackedContext;
 import org.opendaylight.mdsal.binding.generator.util.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.generator.util.JavassistUtils;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.util.BindingReflections;
 import org.opendaylight.yangtools.yang.data.api.schema.MapNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
@@ -99,6 +101,10 @@ public class OpendaylightRestconfClient {
     private static final DataSchemaNode s_networkTopologySchemaNode;
     private static final DataSchemaNode s_topologySchemaNode;
 
+    private static final BindingCodecTreeNode<Nodes> s_inventoryNodesCodec;
+    private static final BindingCodecTreeNode<org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node> s_inventoryNodeCodec;
+    private static final DataSchemaNode s_inventorySchemaNode;
+
     static {
         /*
          * This next block of code scans the class-path for .yang files in order to
@@ -109,8 +115,16 @@ public class OpendaylightRestconfClient {
         ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.$YangModuleInfoImpl.getInstance());
         ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.host.tracker.rev140624.$YangModuleInfoImpl.getInstance());
         ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.model.topology.inventory.rev131030.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.flow.statistics.rev130819.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.port.statistics.rev131214.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.group.statistics.rev131111.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.flow.table.statistics.rev131215.$YangModuleInfoImpl.getInstance());
+        ctx.registerModuleInfo(org.opendaylight.yang.gen.v1.urn.opendaylight.l2switch.loopremover.rev140714.$YangModuleInfoImpl.getInstance());
+
         // Alternatively, we could load everything on the classpath
-        // ctx.addModuleInfos(BindingReflections.loadModuleInfos());
+       // ctx.addModuleInfos(BindingReflections.loadModuleInfos());
         s_schemaContext = ctx.tryToCreateSchemaContext().get();
         BindingRuntimeContext runtimeContext = BindingRuntimeContext.create(ctx, s_schemaContext);
         final JavassistUtils utils = JavassistUtils.forClassPool(ClassPool.getDefault());
@@ -122,15 +136,19 @@ public class OpendaylightRestconfClient {
         s_topologyCodec = s_networkTopologyCodec.streamChild(Topology.class);
         s_nodeCodec = s_topologyCodec.streamChild(Node.class);
 
-
         s_networkTopologySchemaNode = s_schemaContext.getDataChildByName(NetworkTopology.QNAME);
         s_topologySchemaNode = ((DataNodeContainer)s_networkTopologySchemaNode).getDataChildByName(Topology.QNAME);
+
+        s_inventoryNodesCodec = registry.getCodecContext().getSubtreeCodec(InstanceIdentifier.create(org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes.class));
+        s_inventoryNodeCodec = s_inventoryNodesCodec.streamChild(org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node.class);
+        s_inventorySchemaNode = s_schemaContext.getDataChildByName(org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes.QNAME);
     }
 
     private final String controllerUrl;
     private final String username;
     private final String password;
     private final boolean httpRequestLoggingEnabled = false;
+    private final YangDecoder yangDecoder;
 
     private final HttpUrl baseUrl;
     private final OkHttpClient okHttpClient;
@@ -163,6 +181,7 @@ public class OpendaylightRestconfClient {
             clientBuilder.addInterceptor(logging);
         }
         okHttpClient = clientBuilder.build();
+        yangDecoder = new YangDecoder();
     }
 
     public void destroy() {
@@ -256,6 +275,38 @@ public class OpendaylightRestconfClient {
                     final String json = body.string();
                     final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
                     return s_nodeCodec.deserialize(node.getValue().iterator().next());
+                } finally {
+                    body.close();
+                }
+            } else {
+                throw new IOException(String.format("Response was successful, but got empty body for URL: %s",
+                        httpUrl));
+            }
+        } else {
+            throw new IOException(String.format("GET for URL: %s failed. Response: %s",
+                    httpUrl, response));
+        }
+    }
+
+    public org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node getNodeFromOperationalInventory(String nodeId) throws IOException {
+        final HttpUrl httpUrl = baseUrl.newBuilder()
+                .addPathSegment("restconf")
+                .addPathSegment("operational")
+                .addPathSegment("opendaylight-inventory:nodes")
+                .addPathSegment("node")
+                .addPathSegment(nodeId)
+                .build();
+        final Response response = doGetWithResponse(httpUrl);
+        if (response.code() == 404) {
+            return null;
+        } else if (response.isSuccessful()) {
+            final ResponseBody body = response.body();
+            if (body != null) {
+                try {
+                    final String json = body.string();
+                    //return yangDecoder.getNode(json);
+                    final MapNode node = (MapNode)streamJsonToNode(json, s_inventorySchemaNode);
+                    return s_inventoryNodeCodec.deserialize(node.getValue().iterator().next());
                 } finally {
                     body.close();
                 }

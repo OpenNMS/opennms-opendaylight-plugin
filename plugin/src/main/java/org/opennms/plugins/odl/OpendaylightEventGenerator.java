@@ -108,10 +108,10 @@ public class OpendaylightEventGenerator implements Runnable {
                 LOG.info("Refreshing the operational topology.");
                 for (org.opennms.integration.api.v1.model.Node node : nodeDao.getNodesInForeignSource("ODL")) {
                     try {
-                        LOG.info("Refreshing node state for: {}", node.getForeignId());
+                        LOG.info("Refreshing node state for: {}", node.getLabel());
                         refreshNodeState(node);
                     } catch (Exception e) {
-                        LOG.error("Failed to refresh state for node: {}", e);
+                        LOG.error("Failed to refresh state for node: {}", node.getLabel(), e);
                     }
                 }
             } catch (InterruptedException e) {

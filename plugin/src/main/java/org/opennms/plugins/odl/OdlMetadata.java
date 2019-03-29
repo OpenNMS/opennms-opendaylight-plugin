@@ -28,31 +28,36 @@
 
 package org.opennms.plugins.odl;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class NamingUtils {
+import org.opennms.integration.api.v1.model.MetaData;
+import org.opennms.integration.api.v1.model.Node;
 
-    public static String getNodeIdFromForeignId(String foreignId) {
-        return foreignId.replace("_", ":");
+public class OdlMetadata {
+    public static final String NODE_ID_KEY = "nodeId";
+    public static final String TOPOLOGY_ID_KEY = "topologyId";
+
+    private final Map<String, String> metadata;
+
+    public OdlMetadata(Node node) {
+        Objects.requireNonNull(node);
+        metadata = getOdlMetadata(node);
     }
 
-    public static String generateIpAddressForForeignId(String foreignId) {
-        // TODO Generate IPv6 addresses in the link-local prefix fe80::/10
-        Pattern switches = Pattern.compile(".*openflow_(\\d+)$");
-        Matcher m = switches.matcher(foreignId);
-        if (m.find()) {
-            return "127.0.10." + m.group(1);
-        }
-
-        Pattern hosts = Pattern.compile(".*host_00_00_00_00_00_0(\\d+)$");
-        m = hosts.matcher(foreignId);
-        if (m.find()) {
-            return "127.0.20." + m.group(1);
-        }
-
-        // host_7e_5e_40_6a_a9_d4
-
-        throw new RuntimeException("Unsupported fid: " + foreignId);
+    public String getNodeId() {
+        return metadata.get(NODE_ID_KEY);
     }
+
+    public String getTopologyId() {
+        return metadata.get(TOPOLOGY_ID_KEY);
+    }
+
+    private static Map<String, String> getOdlMetadata(Node node) {
+        return node.getMetaData().stream()
+                .filter(m -> Objects.equals(OpendaylightRequisitionProvider.METADATA_CONTEXT_ID, m.getContext()))
+                .collect(Collectors.toMap(MetaData::getKey, MetaData::getValue));
+    }
+
 }
