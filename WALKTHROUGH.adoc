@@ -1,0 +1,203 @@
+= Opendaylight integration with OpenNMS
+:imagesdir: assets/images
+
+As a user and developer of OpenNMS I've often wanted to be able to use and test the platform's features in a controlled environment.
+The challenge continues to be setting up a network and services in such a way that can be used to drive the solution.
+
+Here we leverage the Opendaylight integration in OpenNMS to create a virtual network that can be used to exercise and test the platform.
+
+It can be used to help you:
+
+* Interact with alarms
+* Interact with topology
+* Interact with performance data
+* Interact with correlation
+* Interact with flows link:FLOWS.md[(Help Wanted)]
+* Develop using the OIA
+
+== Setting up OpenNMS
+
+This walkthrough assumes that you have an existing instance of OpenNMS Horizon 24.0.0 or greater running.
+
+== Setup the network
+
+Fire up OpenDaylight:
+```
+mkdir -p /tmp/sdn/odl
+cd /tmp/sdn
+wget https://nexus.opendaylight.org/content/repositories/public/org/opendaylight/integration/karaf/0.8.4/karaf-0.8.4.tar.gz
+tar zxvf karaf-0.8.4.tar.gz -C odl --strip-components=1
+./odl/bin/karaf
+```
+
+IMPORTANT: When running both OpenNMS and OpenDaylight on the same host you'll need to A) disable the `PollerBackEnd` service in OpenNMS (RMI port conflict) and B) change the SSH port for one of the containers in `org.apache.karaf.shell.cfg` (SSH port conflict).
+
+Install the following features:
+```
+feature:install odl-mdsal-clustering odl-mdsal-all odl-restconf odl-l2switch-switch odl-dlux-core odl-l2switch-switch-ui
+```
+
+Fire up Containernet:
+```
+docker pull containernet/containernet
+docker run --name containernet -it -d --privileged --pid='host' -v /var/run/docker.sock:/var/run/docker.sock containernet/containernet           
+docker exec -it containernet /bin/bash
+```
+
+Make sure you can connect back to your SDN controller from the containernet shell:
+```
+export OPENDAYLIGHT_HOST=172.17.0.1
+export OPENDAYLIGHT_PORT=6633
+telnet $OPENDAYLIGHT_HOST $OPENDAYLIGHT_PORT
+```
+
+Use a script that connects to a remote controller:
+```
+cat >net.py <<EOT
+#!/usr/bin/python
+from mininet.net import Mininet
+from mininet.net import Containernet
+from mininet.node import Controller, RemoteController
+from mininet.topolib import TreeTopo
+from mininet.cli import CLI
+from mininet.link import TCLink
+from mininet.log import info, setLogLevel
+setLogLevel('info')
+
+c0 = RemoteController('c0', ip='$OPENDAYLIGHT_HOST', port=$OPENDAYLIGHT_PORT)
+topo = TreeTopo(depth=2, fanout=2)
+net = Mininet(topo=topo, build=False)
+net.addController(c0)
+net.build()
+net.start()
+info('*** Running CLI\n')
+CLI(net)
+info('*** Stopping network')
+net.stop()
+EOT
+```
+
+Start the script:
+```
+chmod +x net.py
+./net.py
+```
+
+NOTE: If you encounter an error of the form `Exception: Error creating interface pair (s1-eth1,s2-eth3): RTNETLINK answers: File exists`, try running `sudo mn -c` to reset.
+
+When the shell is ready, run:
+```
+containernet> pingall
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4
+h2 -> h1 h3 h4
+h3 -> h1 h2 h4
+h4 -> h1 h2 h3
+*** Results: 0% dropped (12/12 received)
+```
+
+=== Enable flows
+
+In a separate shell in the Mininet container run:
+```
+export COLLECTOR_IP=172.17.0.1
+export COLLECTOR_PORT=4730
+
+ovs-appctl vlog/set ipfix:file:dbg
+
+for SWITCH in "s1" "s2" "s3"
+do
+ovs-vsctl -- set Bridge $SWITCH ipfix=@i -- --id=@i create IPFIX targets=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" obs_domain_id=12 obs_point_id=1
+done
+```
+
+TIP: Use `iperf h1 h4` in the Mininet console to generate traffic.
+
+== Import the network
+
+Compile the OpenDaylight plugin:
+```
+git clone https://github.com/opennms-forge/opennms-odl-plugin
+cd opennms-odl-plugin
+mvn clean install
+```
+
+Install the OpenDaylight plugin.
+From the OpenNMS Karaf shell:
+```
+feature:repo-add mvn:org.opennms.plugins.odl/odl-karaf-features/1.0.0-SNAPSHOT/xml
+config:edit org.opennms.plugins.opendaylight
+property-set controllerUrl http://localhost:8181
+config:update
+feature:install opennms-plugins-odl
+```
+
+Verify controller communication using the `health:check` command:
+```
+Connect to the Opendaylight controller         [ Success  ] => Found 1 topology(s).
+```
+
+Render the requisition using:
+```
+provision:show-import -x opendaylight
+```
+
+TIP: Add a foreign source with no detectors:
+`curl -v -u admin:admin -X POST http://localhost:8980/opennms/rest/foreignSources \
+    -H "Content-Type: application/xml" \
+    --data '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><foreign-source xmlns="http://xmlns.opennms.org/xsd/config/foreign-source" name="ODL" date-stamp="2019-01-28T13:58:27.945-05:00"><scan-interval>12w</scan-interval><detectors/><policies/></foreign-source>'`
+
+Trigger the import using:
+```
+./bin/send-event.pl uei.opennms.org/internal/importer/reloadImport --parm 'url requisition://opendaylight'
+```
+
+
+== Topology
+
+Imported inventory:
+
+image::ovs_node.png[Open vSwitch Node,800]
+
+Topology:
+
+image::mininet_topology.png[Mininet topology,800]
+
+=== OCE
+
+Load OCE with the deep learning engine:
+
+```
+feature:repo-add mvn:org.opennms.oce/oce-karaf-features/1.0.0-SNAPSHOT/xml
+feature:install oce-opennms-standalone oce-engine-deeplearning
+```
+
+== Events
+
+Now that our inventory is provisioned, let's trigger a fault.
+From the Mininet console:
+```
+link s2 h1 down
+```
+
+We should see an alarm associated with node that has 'openflow:3' as the label.
+
+image::mininet_topology_alarms.png[Topology with alarms triggered,800]
+
+=== Visualize
+
+Snapshot:
+```
+feature:install oce-features-shell
+oce:datasource-snapshot /tmp/snap1
+```
+
+Serve:
+```
+docker pull opennms/oce-viz
+docker run -p 8082:8080 -v /tmp/snap1:/dataset opennms/oce-viz
+```
+
+Open browser to: http://localhost:8082/static/index.html
+
+image::oce_graph_3d.png[Topology with alarms triggered,800]

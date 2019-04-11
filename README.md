@@ -1,17 +1,26 @@
-# opennms-odl-plugin
+# OpenNMS Opendaylight Plugin
 
-## Goal
+## Overview
 
-This plugin was developed with two primary goals in mind:
-1. Integrate with Opendaylight controllers in order to provide visiblity into fault, performance, and topology data from OpenNMS
-1. Help shape the implementation and features of the OpenNMS Integration API
+This plugin adds the ability for OpenNMS to monitor devices and networks managed by Opendaylight controllers to OpenNMS.
 
-## Prerequisites
+We currently support:
+ * Importing inventory from the operational topology
+ * Triggering faults (alarms) when a devices disapears from the operational topology
+ * Collecting and graphing performance metrics
+ * Visualizing the network topology
 
-This plugin requires OpenNMS and the OpenNMS Integration API compiled from the `features/controller-api` branches.
+![](assets/images/mininet_topology_alarms.png "STUI in action")
 
-We assume that you have an existing Opendaylight controller up and running (tested with Oxygen-SR4).
-See `ODL.md` for instructions on setting up a test environment if you don't already have one.
+## Requirements
+
+* OpenNMS Horizon 24.0.0 or greater
+
+* Opendaylight Oxygen-SR4
+
+## Getting Started
+
+See [the walkthrough](WALKTHROUGH.adoc) for instructions on getting started.
 
 ## Build & install
 
@@ -32,21 +41,4 @@ feature:install opennms-plugins-odl
 Update automatically:
 ```
 bundle:watch *
-```
-
-## Using the plugin
-
-Verify connectivity with the controller:
-```
-admin@opennms> health:check
-```
-
-Render the requisition using:
-```
-admin@opennms> provision:show-import -x opendaylight
-```
-
-Trigger the import using:
-```
-./bin/send-event.pl uei.opennms.org/internal/importer/reloadImport --parm 'url requisition://opendaylight'
 ```
