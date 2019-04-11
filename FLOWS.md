@@ -1,4 +1,4 @@
-# Flow hanlding with OpenNMS + Opendaylight + Containernet
+# Flow handling with OpenNMS + Opendaylight + Containernet
 
 ## Overview
 
