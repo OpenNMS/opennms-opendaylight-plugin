@@ -28,9 +28,11 @@
 
 package org.opennms.plugins.odl.metrics;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
@@ -45,6 +47,7 @@ import org.opennms.integration.api.v1.collectors.resource.IpInterfaceResource;
 import org.opennms.integration.api.v1.collectors.resource.NodeResource;
 import org.opennms.integration.api.v1.collectors.resource.NumericAttribute;
 import org.opennms.integration.api.v1.collectors.resource.ResourceBuilder;
+import org.opennms.integration.api.v1.collectors.resource.StringAttribute;
 
 /**
  * Used to generate/extract metrics for a ODL operational inventory node
@@ -79,41 +82,45 @@ public class MetricGenerator {
 
             final FlowCapableNodeConnector flowCapableNodeConnector = nodeConnector.getAugmentation(FlowCapableNodeConnector.class);
             // ifName
-            resourceBuilder.withStringAttribute(new AttributeBuilder()
-                    .withGroup(groupName)
-                    .withName("ifName")
-                    .withStringValue(flowCapableNodeConnector.getName())
-                    .buildString());
+            resourceBuilder.withStringAttribute(string("ifName", groupName, flowCapableNodeConnector::getName));
 
-            // ifSpeed
-            resourceBuilder.withStringAttribute(new AttributeBuilder()
-                    .withGroup(groupName)
-                    .withName("ifSpeed")
-                    .withStringValue(Long.toString(flowCapableNodeConnector.getCurrentSpeed()))
-                    .buildString());
+            // ifHighSpeed - currentSpeed is in kbps
+            resourceBuilder.withStringAttribute(string("ifHighSpeed", groupName, () -> Long.toString(flowCapableNodeConnector.getCurrentSpeed() / 1000)));
 
             final FlowCapableNodeConnectorStatisticsData flow = nodeConnector.getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
             final FlowCapableNodeConnectorStatistics flowStats = flow.getFlowCapableNodeConnectorStatistics();
 
-            // ifHcInOctets
-            resourceBuilder.withNumericAttribute(new AttributeBuilder()
-                    .withGroup(groupName)
-                    .withName("ifHcInOctets")
-                    .withType(NumericAttribute.Type.COUNTER)
-                    .withNumericValue(flowStats.getBytes().getReceived().doubleValue())
-                    .buildNumeric());
+            // ifHCInOctets, ifHCOutOctets
+            resourceBuilder.withNumericAttribute(counter("ifHCInOctets", groupName, () -> flowStats.getBytes().getReceived()));
+            resourceBuilder.withNumericAttribute(counter("ifHCOutOctets", groupName, () -> flowStats.getBytes().getTransmitted()));
 
-            // ifHcOutOctets
-            resourceBuilder.withNumericAttribute(new AttributeBuilder()
-                    .withGroup(groupName)
-                    .withName("ifHcOutOctets")
-                    .withType(NumericAttribute.Type.COUNTER)
-                    .withNumericValue(flowStats.getBytes().getTransmitted().doubleValue())
-                    .buildNumeric());
+            // ifHCInUcastPkts, ifHCOutUcastPkts
+            resourceBuilder.withNumericAttribute(counter("ifHCInUcastPkts", groupName, () -> flowStats.getPackets().getReceived()));
+            resourceBuilder.withNumericAttribute(counter("ifHCOutUcastPkts", groupName, () -> flowStats.getPackets().getTransmitted()));
+
+            // transmitDrops
+            resourceBuilder.withNumericAttribute(counter("transmitDrops", groupName, flowStats::getTransmitDrops));
 
             // Add the resource to the collection set
             csetBuilder.withCollectionSetResource(resourceBuilder.build());
         }
         return csetBuilder.build();
+    }
+
+    private StringAttribute string(String name, String group, Supplier<String> value) {
+        return new AttributeBuilder()
+                .withName(name)
+                .withGroup(group)
+                .withStringValue(value.get())
+                .buildString();
+    }
+
+    private NumericAttribute counter(String name, String group, Supplier<BigInteger> value) {
+        return new AttributeBuilder()
+                .withName(name)
+                .withGroup(group)
+                .withType(NumericAttribute.Type.COUNTER)
+                .withNumericValue(value.get().doubleValue())
+                .buildNumeric();
     }
 }

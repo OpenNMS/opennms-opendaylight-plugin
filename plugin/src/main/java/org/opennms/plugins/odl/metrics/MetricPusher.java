@@ -64,7 +64,7 @@ public class MetricPusher {
 
     public void init() {
         timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 try {

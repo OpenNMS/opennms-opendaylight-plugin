@@ -121,6 +121,8 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                                 .ipAddress(NON_RESPONSIVE_IP_ADDRESS)
                                 .monitoredService("SDN")
                                 .build())
+                        .asset("latitude", "45.3402474")
+                        .asset("longitude", "-75.9123699")
                         .build());
             }
         }

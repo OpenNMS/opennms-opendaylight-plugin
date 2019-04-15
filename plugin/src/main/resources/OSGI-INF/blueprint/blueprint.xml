@@ -72,4 +72,8 @@
         <argument index="2" ref="collectionSetPersistenceService"/>
     </bean>
 
+    <service interface="org.opennms.integration.api.v1.config.datacollection.graphs.GraphPropertiesExtension">
+        <bean class="org.opennms.plugins.odl.config.GraphPropertiesExtension"/>
+    </service>
+
 </blueprint>
