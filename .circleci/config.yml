@@ -10,7 +10,7 @@ executors:
 workflows:
   build-deploy:
     jobs:
-      - build:
+      - build
 
 jobs:
   build:
