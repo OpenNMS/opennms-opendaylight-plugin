@@ -34,8 +34,8 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opennms.integration.api.v1.health.Context;
 import org.opennms.integration.api.v1.health.HealthCheck;
 import org.opennms.integration.api.v1.health.Response;
-import org.opennms.integration.api.v1.health.ResponseBean;
 import org.opennms.integration.api.v1.health.Status;
+import org.opennms.integration.api.v1.health.immutables.ImmutableResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +61,9 @@ public class OpendaylightHealthCheck implements HealthCheck {
         try {
             final NetworkTopology networkTopology = restconfClient.getOperationalNetworkTopology();
             LOG.info("Network topology: {}", networkTopology);
-            return new ResponseBean(Status.Success, String.format("Found %d topology(s).", networkTopology.getTopology().size()));
+            return ImmutableResponse.newInstance(Status.Success, String.format("Found %d topology(s).", networkTopology.getTopology().size()));
         } catch (Exception e) {
-            return new ResponseBean(e);
+            return ImmutableResponse.newInstance(e);
         }
     }
 }

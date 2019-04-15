@@ -37,7 +37,7 @@ import org.opennms.integration.api.v1.pollers.PollerRequest;
 import org.opennms.integration.api.v1.pollers.PollerResult;
 import org.opennms.integration.api.v1.pollers.ServicePoller;
 import org.opennms.integration.api.v1.pollers.Status;
-import org.opennms.integration.api.v1.pollers.beans.PollerResultBean;
+import org.opennms.integration.api.v1.pollers.immutables.ImmutablePollerResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,10 @@ public class OpendaylightServicePoller implements ServicePoller {
         // Retrieve the node
         final org.opennms.integration.api.v1.model.Node node = nodeDao.getNodeById(pollerRequest.getNodeId());
         if (node == null) {
-            return CompletableFuture.completedFuture(new PollerResultBean(Status.Down, "No matching node found!"));
+            return CompletableFuture.completedFuture(ImmutablePollerResult.newBuilder()
+                    .setStatus(Status.Down)
+                    .setReason("No matching node found!")
+                    .build());
         }
 
         final OdlMetadata odlMetadata = new OdlMetadata(node);
@@ -71,11 +74,20 @@ public class OpendaylightServicePoller implements ServicePoller {
             LOG.debug("Attempting to retrieve node with ID: {} from operational topology with ID: {}", odlNodeId, odlTopologyId);
             Node odlNode = getNodeFromOperationalTopology(node);
             if (odlNode == null) {
-                return CompletableFuture.completedFuture(new PollerResultBean(Status.Down, "Node was not found in operational topology."));
+                return CompletableFuture.completedFuture(
+                        ImmutablePollerResult.newBuilder()
+                                .setStatus(Status.Down)
+                                .setReason("Node was not found in operational topology.")
+                                .build());
             }
-            return CompletableFuture.completedFuture(new PollerResultBean(Status.Up));
+            return CompletableFuture.completedFuture(ImmutablePollerResult.newBuilder()
+                    .setStatus(Status.Up)
+                    .build());
         } catch (Exception e) {
-            return CompletableFuture.completedFuture(new PollerResultBean(e));
+            return CompletableFuture.completedFuture(ImmutablePollerResult.newBuilder()
+                    .setStatus(Status.Down)
+                    .setReason(e.getMessage())
+                    .build());
         }
     }
 

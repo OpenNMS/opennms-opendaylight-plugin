@@ -40,9 +40,10 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opennms.integration.api.v1.config.requisition.Requisition;
-import org.opennms.integration.api.v1.config.requisition.beans.RequisitionBean;
-import org.opennms.integration.api.v1.config.requisition.beans.RequisitionInterfaceBean;
-import org.opennms.integration.api.v1.config.requisition.beans.RequisitionNodeBean;
+import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisition;
+import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisitionInterface;
+import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisitionMetaData;
+import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisitionNode;
 import org.opennms.integration.api.v1.requisition.RequisitionProvider;
 import org.opennms.integration.api.v1.requisition.RequisitionRepository;
 import org.opennms.integration.api.v1.requisition.RequisitionRequest;
@@ -97,8 +98,8 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
         // TODO: Load existing requisition instead of starting from scracth?
         requisitionRepository.getDeployedRequisition(DEFAULT_FOREIGN_SOURCE);
 
-        final RequisitionBean.Builder requisitionBuilder = RequisitionBean.builder()
-                .foreignSource(DEFAULT_FOREIGN_SOURCE);
+        final ImmutableRequisition.Builder requisitionBuilder = ImmutableRequisition.newBuilder()
+                .setForeignSource(DEFAULT_FOREIGN_SOURCE);
 
         for (Topology topology : networkTopology.getTopology()) {
             if (topology.getNode() == null) {
@@ -112,17 +113,25 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                 // Colons are typically used a separators, so we replace them to be safe
                 final String foreignId = nodeId.replaceAll(":", "_");
 
-                requisitionBuilder.node(RequisitionNodeBean.builder()
-                        .foreignId(foreignId)
-                        .nodeLabel(nodeId)
-                        .metaData(METADATA_CONTEXT_ID, NODE_ID_KEY, nodeId)
-                        .metaData(METADATA_CONTEXT_ID, TOPOLOGY_ID_KEY, topologyId)
-                        .iface(RequisitionInterfaceBean.builder()
-                                .ipAddress(NON_RESPONSIVE_IP_ADDRESS)
-                                .monitoredService("SDN")
+                requisitionBuilder.addNode(ImmutableRequisitionNode.newBuilder()
+                        .setForeignId(foreignId)
+                        .setNodeLabel(nodeId)
+                        .addMetaData(ImmutableRequisitionMetaData.newBuilder()
+                                .setContext(METADATA_CONTEXT_ID)
+                                .setKey(NODE_ID_KEY)
+                                .setValue(nodeId)
                                 .build())
-                        .asset("latitude", "45.3402474")
-                        .asset("longitude", "-75.9123699")
+                        .addMetaData(ImmutableRequisitionMetaData.newBuilder()
+                                .setContext(METADATA_CONTEXT_ID)
+                                .setKey(TOPOLOGY_ID_KEY)
+                                .setValue(topologyId)
+                                .build())
+                        .addInterface(ImmutableRequisitionInterface.newBuilder()
+                                .setIpAddress(NON_RESPONSIVE_IP_ADDRESS)
+                                .addMonitoredService("SDN")
+                                .build())
+                        .addAsset("latitude", "45.3402474")
+                        .addAsset("longitude", "-75.9123699")
                         .build());
             }
         }

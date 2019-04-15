@@ -30,8 +30,6 @@ package org.opennms.plugins.odl;
 
 import static org.opennms.plugins.odl.OpendaylightRequisitionProvider.DEFAULT_FOREIGN_SOURCE;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +46,7 @@ import org.opennms.integration.api.v1.model.Node;
 import org.opennms.integration.api.v1.requisition.RequisitionRepository;
 import org.opennms.integration.api.v1.topology.UserDefinedLink;
 import org.opennms.integration.api.v1.topology.UserDefinedLinkDao;
-import org.opennms.integration.api.v1.topology.beans.UserDefinedLinkBean;
+import org.opennms.integration.api.v1.topology.immutables.ImmutableUserDefinedLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,14 +161,14 @@ public class OpendaylightTopologyHandler implements EventListener {
                 continue;
             }
 
-            udl = UserDefinedLinkBean.builder()
-                    .nodeIdA(node.getId())
-                    .componentLabelA(expectedLink.getSource().getSourceTp().getValue())
-                    .nodeIdZ(targetNode.getId())
-                    .componentLabelZ(expectedLink.getDestination().getDestTp().getValue())
-                    .linkId(linkId)
-                    .linkLabel("Opendaylight Topology")
-                    .owner(EventConstants.SOURCE)
+            udl = ImmutableUserDefinedLink.newBuilder()
+                    .setNodeIdA(node.getId())
+                    .setComponentLabelA(expectedLink.getSource().getSourceTp().getValue())
+                    .setNodeIdZ(targetNode.getId())
+                    .setComponentLabelZ(expectedLink.getDestination().getDestTp().getValue())
+                    .setLinkId(linkId)
+                    .setLinkLabel("Opendaylight Topology")
+                    .setOwner(EventConstants.SOURCE)
                     .build();
             LOG.debug("Inserting link: {}", udl);
             userDefinedLinkDao.saveOrUpdate(udl);

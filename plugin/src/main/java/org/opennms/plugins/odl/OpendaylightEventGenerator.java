@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opennms.integration.api.v1.dao.NodeDao;
 import org.opennms.integration.api.v1.events.EventForwarder;
-import org.opennms.integration.api.v1.model.beans.InMemoryEventBean;
+import org.opennms.integration.api.v1.model.InMemoryEvent;
+import org.opennms.integration.api.v1.model.immutables.ImmutableInMemoryEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,14 +143,20 @@ public class OpendaylightEventGenerator implements Runnable {
     }
 
     private void sendOfflineEvent(org.opennms.integration.api.v1.model.Node node) {
-        InMemoryEventBean event = new InMemoryEventBean(EventConstants.NODE_OFFLINE_UEI, EventConstants.SOURCE);
-        event.setNodeId(node.getId());
+        final InMemoryEvent event = ImmutableInMemoryEvent.newBuilder()
+                .setUei(EventConstants.NODE_OFFLINE_UEI)
+                .setSource(EventConstants.SOURCE)
+                .setNodeId(node.getId())
+                .build();
         eventForwarder.sendAsync(event);
     }
 
     private void sendOnlineEvent(org.opennms.integration.api.v1.model.Node node) {
-        InMemoryEventBean event = new InMemoryEventBean(EventConstants.NODE_ONLINE_UEI, EventConstants.SOURCE);
-        event.setNodeId(node.getId());
+        final InMemoryEvent event = ImmutableInMemoryEvent.newBuilder()
+                .setUei(EventConstants.NODE_ONLINE_UEI)
+                .setSource(EventConstants.SOURCE)
+                .setNodeId(node.getId())
+                .build();
         eventForwarder.sendAsync(event);
     }
 
