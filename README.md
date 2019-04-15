@@ -1,4 +1,4 @@
-# OpenNMS Opendaylight Plugin
+# OpenNMS Opendaylight Plugin [![CircleCI](https://circleci.com/gh/OpenNMS/opennms-opendaylight-plugin.svg?style=svg)](https://circleci.com/gh/OpenNMS/opennms-opendaylight-plugin)
 
 ## Overview
 
