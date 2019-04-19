@@ -103,6 +103,23 @@ h9 -> h1 h2 h3 h4 h5 h6 h7 h8
 *** Results: 1% dropped (71/72 received)
 ```
 
+You can also display the topology using:
+```
+containernet> links
+s1-eth1<->s2-eth4 (OK OK)
+s1-eth2<->s3-eth4 (OK OK)
+s1-eth3<->s4-eth4 (OK OK)
+s2-eth1<->h1-eth0 (OK OK)
+s2-eth2<->h2-eth0 (OK OK)
+s2-eth3<->h3-eth0 (OK OK)
+s3-eth1<->h4-eth0 (OK OK)
+s3-eth2<->h5-eth0 (OK OK)
+s3-eth3<->h6-eth0 (OK OK)
+s4-eth1<->h7-eth0 (OK OK)
+s4-eth2<->h8-eth0 (OK OK)
+s4-eth3<->h9-eth0 (OK OK)
+```
+
 === Enable flows
 
 In a separate shell in the Mininet container run:
@@ -112,7 +129,7 @@ export COLLECTOR_PORT=4730
 
 ovs-appctl vlog/set ipfix:file:dbg
 
-for SWITCH in "s1" "s2" "s3"
+for SWITCH in "s1" "s2" "s3" "s4"
 do
 ovs-vsctl -- set Bridge $SWITCH ipfix=@i -- --id=@i create IPFIX targets=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" obs_domain_id=12 obs_point_id=1
 done
