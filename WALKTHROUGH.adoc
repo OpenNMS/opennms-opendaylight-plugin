@@ -15,6 +15,8 @@ It can be used to help you:
 * Interact with flows link:FLOWS.md[(Help Wanted)]
 * Develop using the OIA
 
+This document will walk you through setting up the Opendaylight integration and use it to show case some of the features available in OpenNMS.
+
 == Setting up OpenNMS
 
 This walkthrough assumes that you have an existing instance of OpenNMS Horizon 24.0.0 or greater running.
@@ -65,7 +67,7 @@ from mininet.log import info, setLogLevel
 setLogLevel('info')
 
 c0 = RemoteController('c0', ip='$OPENDAYLIGHT_HOST', port=$OPENDAYLIGHT_PORT)
-topo = TreeTopo(depth=2, fanout=2)
+topo = TreeTopo(depth=2, fanout=3)
 net = Mininet(topo=topo, build=False)
 net.addController(c0)
 net.build()
@@ -89,11 +91,16 @@ When the shell is ready, run:
 ```
 containernet> pingall
 *** Ping: testing ping reachability
-h1 -> h2 h3 h4
-h2 -> h1 h3 h4
-h3 -> h1 h2 h4
-h4 -> h1 h2 h3
-*** Results: 0% dropped (12/12 received)
+h1 -> X h3 h4 h5 h6 h7 h8 h9
+h2 -> h1 h3 h4 h5 h6 h7 h8 h9
+h3 -> h1 h2 h4 h5 h6 h7 h8 h9
+h4 -> h1 h2 h3 h5 h6 h7 h8 h9
+h5 -> h1 h2 h3 h4 h6 h7 h8 h9
+h6 -> h1 h2 h3 h4 h5 h7 h8 h9
+h7 -> h1 h2 h3 h4 h5 h6 h8 h9
+h8 -> h1 h2 h3 h4 h5 h6 h7 h9
+h9 -> h1 h2 h3 h4 h5 h6 h7 h8
+*** Results: 1% dropped (71/72 received)
 ```
 
 === Enable flows
@@ -117,8 +124,8 @@ TIP: Use `iperf h1 h4` in the Mininet console to generate traffic.
 
 Compile the OpenDaylight plugin:
 ```
-git clone https://github.com/opennms-forge/opennms-odl-plugin
-cd opennms-odl-plugin
+git clone https://github.com/OpenNMS/opennms-opendaylight-plugin
+cd opennms-opendaylight-plugin
 mvn clean install
 ```
 
@@ -130,6 +137,11 @@ config:edit org.opennms.plugins.opendaylight
 property-set controllerUrl http://localhost:8181
 config:update
 feature:install opennms-plugins-odl
+```
+
+Set the log level:
+```
+log:set INFO org.opennms.plugins.odl
 ```
 
 Verify controller communication using the `health:check` command:
@@ -163,41 +175,104 @@ Topology:
 
 image::mininet_topology.png[Mininet topology,800]
 
-=== ALEC
-
-Load ALEC with the deep learning engine:
-
-```
-feature:repo-add mvn:org.opennms.alec/alaec-karaf-features/1.0.0-SNAPSHOT/xml
-feature:install alec-opennms-standalone alec-engine-deeplearning
-```
-
-== Events
+== Alarms
 
 Now that our inventory is provisioned, let's trigger a fault.
 From the Mininet console:
 ```
-link s2 h1 down
+containernet> link s2 h1 down
+containernet> link s3 h4 down
 ```
 
 We should see an alarm associated with node that has 'openflow:3' as the label.
 
 image::mininet_topology_alarms.png[Topology with alarms triggered,800]
 
+We can also take the opportunity to look at the alarms in Helm:
+
+image::helm_alarms.png[Helm with alarms triggered,800]
+
+== ALEC
+
+=== Setup
+
+Load ALEC in OpenNMS:
+
+```
+feature:repo-add mvn:org.opennms.alec/alec-karaf-features/1.0.1-SNAPSHOT/xml
+feature:install alec-opennms-standalone
+```
+
+
+Customize the inventory mapping:
+
+```
+cp datasource/opennms-direct/src/main/resources/inventory.groovy /tmp/inventory.groovy
+```
+
+Edit `/tmp/inventory.groovy` and change the `PORT_LINK_WEIGHT` constant to `25`.
+
+Configure the datasource to use the custom inventory mapping:
+
+```
+config:edit org.opennms.alec.datasource.opennms.direct
+config:property-set scriptFile /tmp/inventory.groovy
+config:update
+```
+
+Restart the driver:
+```
+bundle:restart org.opennms.alec.driver.main
+```
+
+Verify that everything is running again:
+```
+admin@opennms> opennms-alec:list-graphs 
+dbscan: 1 situations on 37 vertices and 48 edges.
+```
+
+=== Situations
+
+Now, let's trigger a few alarms on the same switch:
+```
+link s4 h7 down
+link s4 h8 down
+link s4 h9 down
+```
+
+The 3 alarms should be correlated into a single situation:
+
+image::nms_situation.png[Situation in OpenNMS,800]
+
+We can also view the situation from Helm:
+
+image::helm_situation.png[Situation in Helm,800]
+
+==== Feedback
+
+Install the situation feedback feature in OpenNMS:
+```
+feature:install opennms-situation-feedback
+```
+
+And provide feedback from the alarm details modal in Helm:
+
+image::helm_feedback.png[Situation feedback in Helm,800]
+
 === Visualize
 
-Snapshot:
+Let's take a snapshot of the state:
 ```
 feature:install alec-features-shell
 opennms-alec:datasource-snapshot /tmp/snap1
 ```
 
-Serve:
+Load the snapshot in the ALEC vizualization tool:
 ```
 docker pull opennms/alec-viz
 docker run -p 8082:8080 -v /tmp/snap1:/dataset opennms/alec-viz
 ```
 
-Open browser to: http://localhost:8082/static/index.html
+Open browser to: http://localhost:8082/static/index.html and view the situation along with the alarms and inventory graph in 3D:
 
-image::oce_graph_3d.png[Topology with alarms triggered,800]
+image::alec_graph_3d.png[Topology with alarms triggered,800]
