@@ -240,6 +240,10 @@ link s4 h8 down
 link s4 h9 down
 ```
 
+The 3 alarms should be visible in the Topology UI:
+
+image::mininet_topology_alarms_for_situation.png[Topology with alarms from situation,800]
+
 The 3 alarms should be correlated into a single situation:
 
 image::nms_situation.png[Situation in OpenNMS,800]
@@ -259,7 +263,28 @@ And provide feedback from the alarm details modal in Helm:
 
 image::helm_feedback.png[Situation feedback in Helm,800]
 
-=== Visualize
+This feedback will be saved in Elasticsearch and can be used to help train the correlation engine's behavior.
+
+=== Graph Visualization
+
+Let's export the graph from ALEC:
+
+```
+feature:install alec-features-shell
+opennms-alec:export-graph dbscan /tmp/alec.graphml.xml
+```
+
+And now POST it to OpenNMS:
+
+```
+curl -X POST -H "Content-Type: application/xml" -u admin:admin -d@/tmp/alec.graphml.xml 'http://localhost:8980/opennms/rest/graphml/alec'
+```
+
+We can then view the graph using the Topology UI:
+
+image::topology_alec_graph.png[Topology with ALEC graph,800]
+
+=== 3D Visualization
 
 Let's take a snapshot of the state:
 ```
@@ -267,7 +292,7 @@ feature:install alec-features-shell
 opennms-alec:datasource-snapshot /tmp/snap1
 ```
 
-Load the snapshot in the ALEC vizualization tool:
+Load the snapshot in the ALEC visualization tool:
 ```
 docker pull opennms/alec-viz
 docker run -p 8082:8080 -v /tmp/snap1:/dataset opennms/alec-viz
