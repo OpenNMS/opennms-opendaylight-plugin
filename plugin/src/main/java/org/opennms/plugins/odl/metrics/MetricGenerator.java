@@ -88,21 +88,23 @@ public class MetricGenerator {
             resourceBuilder.addStringAttribute(string("ifHighSpeed", groupName, () -> Long.toString(flowCapableNodeConnector.getCurrentSpeed() / 1000)));
 
             final FlowCapableNodeConnectorStatisticsData flow = nodeConnector.getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
-            final FlowCapableNodeConnectorStatistics flowStats = flow.getFlowCapableNodeConnectorStatistics();
+            if (flow != null) {
+                final FlowCapableNodeConnectorStatistics flowStats = flow.getFlowCapableNodeConnectorStatistics();
 
-            // ifHCInOctets, ifHCOutOctets
-            resourceBuilder.addNumericAttribute(counter("ifHCInOctets", groupName, () -> flowStats.getBytes().getReceived()));
-            resourceBuilder.addNumericAttribute(counter("ifHCOutOctets", groupName, () -> flowStats.getBytes().getTransmitted()));
+                // ifHCInOctets, ifHCOutOctets
+                resourceBuilder.addNumericAttribute(counter("ifHCInOctets", groupName, () -> flowStats.getBytes().getReceived()));
+                resourceBuilder.addNumericAttribute(counter("ifHCOutOctets", groupName, () -> flowStats.getBytes().getTransmitted()));
 
-            // ifHCInUcastPkts, ifHCOutUcastPkts
-            resourceBuilder.addNumericAttribute(counter("ifHCInUcastPkts", groupName, () -> flowStats.getPackets().getReceived()));
-            resourceBuilder.addNumericAttribute(counter("ifHCOutUcastPkts", groupName, () -> flowStats.getPackets().getTransmitted()));
+                // ifHCInUcastPkts, ifHCOutUcastPkts
+                resourceBuilder.addNumericAttribute(counter("ifHCInUcastPkts", groupName, () -> flowStats.getPackets().getReceived()));
+                resourceBuilder.addNumericAttribute(counter("ifHCOutUcastPkts", groupName, () -> flowStats.getPackets().getTransmitted()));
 
-            // transmitDrops
-            resourceBuilder.addNumericAttribute(counter("transmitDrops", groupName, flowStats::getTransmitDrops));
+                // transmitDrops
+                resourceBuilder.addNumericAttribute(counter("transmitDrops", groupName, flowStats::getTransmitDrops));
 
-            // Add the resource to the collection set
-            csetBuilder.addCollectionSetResource(resourceBuilder.build());
+                // Add the resource to the collection set
+                csetBuilder.addCollectionSetResource(resourceBuilder.build());
+            }
         }
         return csetBuilder.build();
     }

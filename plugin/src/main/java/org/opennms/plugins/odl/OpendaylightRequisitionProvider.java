@@ -130,8 +130,8 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                                 .setIpAddress(NON_RESPONSIVE_IP_ADDRESS)
                                 .addMonitoredService("SDN")
                                 .build())
-                        .addAsset("latitude", "45.3402474")
-                        .addAsset("longitude", "-75.9123699")
+                        .addAsset("latitude", "45.340561")
+                        .addAsset("longitude", "-75.910005")
                         .build());
             }
         }

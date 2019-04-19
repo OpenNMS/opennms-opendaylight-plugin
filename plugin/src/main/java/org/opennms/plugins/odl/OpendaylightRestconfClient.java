@@ -265,26 +265,27 @@ public class OpendaylightRestconfClient {
                 .addPathSegment("node")
                 .addPathSegment(nodeId)
                 .build();
-        final Response response = doGetWithResponse(httpUrl);
-        if (response.code() == 404) {
-            return null;
-        } else if (response.isSuccessful()) {
-            final ResponseBody body = response.body();
-            if (body != null) {
-                try {
-                    final String json = body.string();
-                    final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
-                    return s_nodeCodec.deserialize(node.getValue().iterator().next());
-                } finally {
-                    body.close();
+        try(final Response response = doGetWithResponse(httpUrl)) {
+            if (response.code() == 404) {
+                return null;
+            } else if (response.isSuccessful()) {
+                final ResponseBody body = response.body();
+                if (body != null) {
+                    try {
+                        final String json = body.string();
+                        final MapNode node = (MapNode)streamJsonToNode(json, s_topologySchemaNode);
+                        return s_nodeCodec.deserialize(node.getValue().iterator().next());
+                    } finally {
+                        body.close();
+                    }
+                } else {
+                    throw new IOException(String.format("Response was successful, but got empty body for URL: %s",
+                            httpUrl));
                 }
             } else {
-                throw new IOException(String.format("Response was successful, but got empty body for URL: %s",
-                        httpUrl));
+                throw new IOException(String.format("GET for URL: %s failed. Response: %s",
+                        httpUrl, response));
             }
-        } else {
-            throw new IOException(String.format("GET for URL: %s failed. Response: %s",
-                    httpUrl, response));
         }
     }
 
@@ -296,27 +297,28 @@ public class OpendaylightRestconfClient {
                 .addPathSegment("node")
                 .addPathSegment(nodeId)
                 .build();
-        final Response response = doGetWithResponse(httpUrl);
-        if (response.code() == 404) {
-            return null;
-        } else if (response.isSuccessful()) {
-            final ResponseBody body = response.body();
-            if (body != null) {
-                try {
-                    final String json = body.string();
-                    //return yangDecoder.getNode(json);
-                    final MapNode node = (MapNode)streamJsonToNode(json, s_inventorySchemaNode);
-                    return s_inventoryNodeCodec.deserialize(node.getValue().iterator().next());
-                } finally {
-                    body.close();
+        try (final Response response = doGetWithResponse(httpUrl)) {
+            if (response.code() == 404) {
+                return null;
+            } else if (response.isSuccessful()) {
+                final ResponseBody body = response.body();
+                if (body != null) {
+                    try {
+                        final String json = body.string();
+                        //return yangDecoder.getNode(json);
+                        final MapNode node = (MapNode)streamJsonToNode(json, s_inventorySchemaNode);
+                        return s_inventoryNodeCodec.deserialize(node.getValue().iterator().next());
+                    } finally {
+                        body.close();
+                    }
+                } else {
+                    throw new IOException(String.format("Response was successful, but got empty body for URL: %s",
+                            httpUrl));
                 }
             } else {
-                throw new IOException(String.format("Response was successful, but got empty body for URL: %s",
-                        httpUrl));
+                throw new IOException(String.format("GET for URL: %s failed. Response: %s",
+                        httpUrl, response));
             }
-        } else {
-            throw new IOException(String.format("GET for URL: %s failed. Response: %s",
-                    httpUrl, response));
         }
     }
 

@@ -84,6 +84,7 @@ public class OpendaylightEventGenerator implements Runnable {
         }
 
         thread = new Thread(this);
+        thread.setName("ODL-EventGenerator");
         thread.start();
     }
 
@@ -106,10 +107,10 @@ public class OpendaylightEventGenerator implements Runnable {
                     triggerNextPoll.wait(REFRESH_PERIOD_MS);
                 }
 
-                LOG.info("Refreshing the operational topology.");
+                LOG.debug("Refreshing the operational topology.");
                 for (org.opennms.integration.api.v1.model.Node node : nodeDao.getNodesInForeignSource("ODL")) {
                     try {
-                        LOG.info("Refreshing node state for: {}", node.getLabel());
+                        LOG.debug("Refreshing node state for: {}", node.getLabel());
                         refreshNodeState(node);
                     } catch (Exception e) {
                         LOG.error("Failed to refresh state for node: {}", node.getLabel(), e);

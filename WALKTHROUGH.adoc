@@ -163,13 +163,13 @@ Topology:
 
 image::mininet_topology.png[Mininet topology,800]
 
-=== OCE
+=== ALEC
 
-Load OCE with the deep learning engine:
+Load ALEC with the deep learning engine:
 
 ```
-feature:repo-add mvn:org.opennms.oce/oce-karaf-features/1.0.0-SNAPSHOT/xml
-feature:install oce-opennms-standalone oce-engine-deeplearning
+feature:repo-add mvn:org.opennms.alec/alaec-karaf-features/1.0.0-SNAPSHOT/xml
+feature:install alec-opennms-standalone alec-engine-deeplearning
 ```
 
 == Events
@@ -188,14 +188,14 @@ image::mininet_topology_alarms.png[Topology with alarms triggered,800]
 
 Snapshot:
 ```
-feature:install oce-features-shell
-oce:datasource-snapshot /tmp/snap1
+feature:install alec-features-shell
+opennms-alec:datasource-snapshot /tmp/snap1
 ```
 
 Serve:
 ```
-docker pull opennms/oce-viz
-docker run -p 8082:8080 -v /tmp/snap1:/dataset opennms/oce-viz
+docker pull opennms/alec-viz
+docker run -p 8082:8080 -v /tmp/snap1:/dataset opennms/alec-viz
 ```
 
 Open browser to: http://localhost:8082/static/index.html

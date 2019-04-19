@@ -67,6 +67,7 @@ public class MetricPusher {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+                Thread.currentThread().setName("ODL-MetricPusher");
                 try {
                     gatherAndPersistMetrics();
                 } catch (Exception e) {
@@ -95,15 +96,15 @@ public class MetricPusher {
         for (Node onmsNode : onmsNodes) {
             final OdlMetadata odlMetadata = new OdlMetadata(onmsNode);
             try {
-                LOG.info("Collecting metrics for: {}", onmsNode.getLabel());
+                LOG.debug("Collecting metrics for: {}", onmsNode.getLabel());
                 org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node node = client.getNodeFromOperationalInventory(odlMetadata.getNodeId());
                 if (node == null) {
-                    LOG.info("Node with label: {} is not in the operational inventory. Skipping.", onmsNode.getLabel());
+                    LOG.debug("Node with label: {} is not in the operational inventory. Skipping.", onmsNode.getLabel());
                     continue;
                 }
                 final CollectionSet collectionSet = metricGenerator.toCollectionSet(onmsNode, node);
                 collectionSetPersistenceService.persist(onmsNode.getId(), getFirstInetAddress(onmsNode), collectionSet);
-                LOG.info("Successfully pushed collection set with {} resouces for node: {}", collectionSet.getCollectionSetResources().size(), onmsNode.getLabel());
+                LOG.debug("Successfully pushed collection set with {} resouces for node: {}", collectionSet.getCollectionSetResources().size(), onmsNode.getLabel());
             } catch (Exception e ){
                 LOG.error("Failed to gather/persist metrics for: {}", onmsNode.getLabel(), e);
             }
