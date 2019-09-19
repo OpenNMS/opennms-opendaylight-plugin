@@ -76,4 +76,11 @@
         <bean class="org.opennms.plugins.odl.config.GraphPropertiesExtension"/>
     </service>
 
+    <service interface="org.opennms.integration.api.v1.config.thresholding.ThreshdConfigurationExtension">
+        <bean class="org.opennms.plugins.odl.config.ThreshdExtension"/>
+    </service>
+
+    <service interface="org.opennms.integration.api.v1.config.thresholding.ThresholdingConfigExtension">
+        <bean class="org.opennms.plugins.odl.config.ThresholdingExtension"/>
+    </service>
 </blueprint>

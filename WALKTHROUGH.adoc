@@ -19,7 +19,7 @@ This document will walk you through setting up the Opendaylight integration and 
 
 == Setting up OpenNMS
 
-This walkthrough assumes that you have an existing instance of OpenNMS Horizon 24.0.0 or greater running.
+This walkthrough assumes that you have an existing instance of OpenNMS Horizon 25.0.0 or greater running.
 
 == Setup the network
 
@@ -36,7 +36,7 @@ IMPORTANT: When running both OpenNMS and OpenDaylight on the same host you'll ne
 
 Install the following features:
 ```
-feature:install odl-mdsal-clustering odl-mdsal-all odl-restconf odl-l2switch-switch odl-dlux-core odl-l2switch-switch-ui
+feature:install odl-mdsal-all odl-restconf odl-l2switch-switch
 ```
 
 Fire up Containernet:
@@ -178,9 +178,13 @@ TIP: Add a foreign source with no detectors:
 
 Trigger the import using:
 ```
-./bin/send-event.pl uei.opennms.org/internal/importer/reloadImport --parm 'url requisition://opendaylight'
+provision:import-requisition opendaylight
 ```
 
+Verify that the nodes were provisioned and have started persisting metrics:
+```
+opennms-measurements:show-resources -n ODL:openflow_1
+```
 
 == Topology
 
@@ -216,7 +220,7 @@ image::helm_alarms.png[Helm with alarms triggered,800]
 Load ALEC in OpenNMS:
 
 ```
-feature:repo-add mvn:org.opennms.alec/alec-karaf-features/1.0.1-SNAPSHOT/xml
+feature:repo-add mvn:org.opennms.alec/alec-karaf-features/1.0.2-SNAPSHOT/xml
 feature:install alec-opennms-standalone
 ```
 

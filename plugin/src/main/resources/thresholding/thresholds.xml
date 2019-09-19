@@ -1,0 +1,5 @@
+<thresholding-config>
+    <group name="Opendaylight" rrdRepository="/opt/opennms/share/rrd/snmp/">
+        <expression description="transmitDrops" type="high" ds-type="if" value="1.0" rearm="0" trigger="2" ds-label="ifName" filterOperator="OR" expression="transmitDrops"/>
+    </group>
+</thresholding-config>
