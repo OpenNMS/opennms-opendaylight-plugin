@@ -41,8 +41,8 @@ feature:install odl-mdsal-all odl-restconf odl-l2switch-switch
 
 Fire up Containernet:
 ```
-docker pull containernet/containernet
-docker run --name containernet -it -d --privileged --pid='host' -v /var/run/docker.sock:/var/run/docker.sock containernet/containernet           
+docker pull containernet/containernet:v1
+docker run --name containernet -it -d --privileged --pid='host' -v /var/run/docker.sock:/var/run/docker.sock containernet/containernet:v1           
 docker exec -it containernet /bin/bash
 ```
 
