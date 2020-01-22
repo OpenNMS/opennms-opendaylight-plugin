@@ -41,6 +41,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opennms.integration.api.v1.dao.NodeDao;
 import org.opennms.integration.api.v1.events.EventListener;
 import org.opennms.integration.api.v1.events.EventSubscriptionService;
+import org.opennms.integration.api.v1.graph.GraphContainerCache;
 import org.opennms.integration.api.v1.model.InMemoryEvent;
 import org.opennms.integration.api.v1.model.Node;
 import org.opennms.integration.api.v1.requisition.RequisitionRepository;
@@ -63,17 +64,20 @@ public class OpendaylightTopologyHandler implements EventListener {
     private final EventSubscriptionService eventSubscriptionService;
     private final NodeDao nodeDao;
     private final UserDefinedLinkDao userDefinedLinkDao;
+    private final GraphContainerCache graphContainerCache;
 
     public OpendaylightTopologyHandler(OpendaylightRestconfClient client,
                                        RequisitionRepository requisitionRepository,
                                        EventSubscriptionService eventSubscriptionService,
                                        NodeDao nodeDao,
-                                       UserDefinedLinkDao userDefinedLinkDao) {
+                                       UserDefinedLinkDao userDefinedLinkDao,
+                                       GraphContainerCache graphContainerCache) {
         this.client = Objects.requireNonNull(client);
         this.requisitionRepository = Objects.requireNonNull(requisitionRepository);
         this.eventSubscriptionService = Objects.requireNonNull(eventSubscriptionService);
         this.nodeDao = Objects.requireNonNull(nodeDao);
         this.userDefinedLinkDao = Objects.requireNonNull(userDefinedLinkDao);
+        this.graphContainerCache = Objects.requireNonNull(graphContainerCache);
     }
 
     @Override
@@ -138,6 +142,9 @@ public class OpendaylightTopologyHandler implements EventListener {
             List<Link> expectedLinks = linksBySourceId.get(node.getLabel());
             pushLinkUpdates(node, expectedLinks, nodesByLabel);
         }
+
+        // TODO MVR: Technically this is not required. Or is it?
+        graphContainerCache.invalidate("flow:1");
     }
 
     private void pushLinkUpdates(Node node, List<Link> expectedLinks, Map<String,Node> nodesByLabel) {

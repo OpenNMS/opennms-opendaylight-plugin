@@ -21,6 +21,7 @@
     <reference id="eventForwarder" interface="org.opennms.integration.api.v1.events.EventForwarder" availability="mandatory"/>
     <reference id="userDefinedLinkDao" interface="org.opennms.integration.api.v1.topology.UserDefinedLinkDao" availability="mandatory"/>
     <reference id="collectionSetPersistenceService" interface="org.opennms.integration.api.v1.collectors.CollectionSetPersistenceService" availability="mandatory"/>
+    <reference id="graphContainerCache" interface="org.opennms.integration.api.v1.graph.GraphContainerCache" availability="mandatory"/>
 
     <bean id="restconfClient" class="org.opennms.plugins.odl.OpendaylightRestconfClient" destroy-method="destroy">
         <argument index="0" value="${controllerUrl}" />
@@ -53,7 +54,17 @@
         <argument index="2" ref="eventSubscriptionService"/>
         <argument index="3" ref="nodeDao"/>
         <argument index="4" ref="userDefinedLinkDao"/>
+        <argument index="5" ref="graphContainerCache" />
     </bean>
+    <bean id="graphProvider" class="org.opennms.plugins.odl.OpendaylightGraphProvider">
+        <argument index="0" ref="restconfClient" />
+    </bean>
+    <service ref="graphProvider" interface="org.opennms.integration.api.v1.graph.GraphProvider">
+        <!-- TODO MVR OIA is supposed to be simple. This is not simple :( -->
+        <service-properties>
+            <entry key="expose-to-topology" value="true" />
+        </service-properties>
+    </service>
 
     <service interface="org.opennms.integration.api.v1.config.events.EventConfExtension">
         <bean class="org.opennms.plugins.odl.OpendaylightEventConfExtension"/>
