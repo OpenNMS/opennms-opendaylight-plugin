@@ -1,20 +1,3 @@
-package org.opennms.plugins.odl;
-
-import java.util.Objects;
-
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
-import org.opennms.integration.api.v1.graph.Edge;
-import org.opennms.integration.api.v1.graph.Graph;
-import org.opennms.integration.api.v1.graph.GraphInfo;
-import org.opennms.integration.api.v1.graph.GraphProvider;
-import org.opennms.integration.api.v1.graph.Vertex;
-import org.opennms.integration.api.v1.graph.immutables.ImmutableEdge;
-import org.opennms.integration.api.v1.graph.immutables.ImmutableGraph;
-import org.opennms.integration.api.v1.graph.immutables.ImmutableGraphInfo;
-import org.opennms.integration.api.v1.graph.immutables.ImmutableVertex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
@@ -42,6 +25,24 @@ import org.slf4j.LoggerFactory;
  *     http://www.opennms.org/
  *     http://www.opennms.com/
  *******************************************************************************/
+
+package org.opennms.plugins.odl;
+
+import java.util.Objects;
+
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opennms.integration.api.v1.graph.Configuration;
+import org.opennms.integration.api.v1.graph.Edge;
+import org.opennms.integration.api.v1.graph.Graph;
+import org.opennms.integration.api.v1.graph.GraphInfo;
+import org.opennms.integration.api.v1.graph.GraphProvider;
+import org.opennms.integration.api.v1.graph.Vertex;
+import org.opennms.integration.api.v1.graph.immutables.ImmutableEdge;
+import org.opennms.integration.api.v1.graph.immutables.ImmutableGraph;
+import org.opennms.integration.api.v1.graph.immutables.ImmutableGraphInfo;
+import org.opennms.integration.api.v1.graph.immutables.ImmutableVertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpendaylightGraphProvider implements GraphProvider {
 
@@ -87,6 +88,11 @@ public class OpendaylightGraphProvider implements GraphProvider {
             graphBuilder.addEdge(edge);
         });
 
+        // Use first vertex as default focus
+        if (!graphBuilder.getVertices().isEmpty()) {
+            graphBuilder.defaultFocus(graphBuilder.getVertices().get(0));
+        }
+
         final ImmutableGraph graph = graphBuilder.build();
         return graph;
     }
@@ -96,8 +102,14 @@ public class OpendaylightGraphProvider implements GraphProvider {
         return new ImmutableGraphInfo(NAMESPACE, LABEL, DESCRIPTION);
     }
 
-    public boolean isTopology() {
-        return true;
+    @Override
+    public Configuration getConfiguration() {
+        return new Configuration() {
+            @Override
+            public boolean isTopology() {
+                return true;
+            }
+        };
     }
 
     private Topology getOperationalTopology() {
