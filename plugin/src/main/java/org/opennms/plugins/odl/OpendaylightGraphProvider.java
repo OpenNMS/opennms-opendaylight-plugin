@@ -31,16 +31,14 @@ package org.opennms.plugins.odl;
 import java.util.Objects;
 
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
-import org.opennms.integration.api.v1.graph.Configuration;
 import org.opennms.integration.api.v1.graph.Edge;
 import org.opennms.integration.api.v1.graph.Graph;
 import org.opennms.integration.api.v1.graph.GraphInfo;
 import org.opennms.integration.api.v1.graph.GraphProvider;
 import org.opennms.integration.api.v1.graph.Vertex;
-import org.opennms.integration.api.v1.graph.immutables.ImmutableEdge;
 import org.opennms.integration.api.v1.graph.immutables.ImmutableGraph;
 import org.opennms.integration.api.v1.graph.immutables.ImmutableGraphInfo;
-import org.opennms.integration.api.v1.graph.immutables.ImmutableVertex;
+import org.opennms.integration.api.v1.topology.IconIds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,16 +59,15 @@ public class OpendaylightGraphProvider implements GraphProvider {
     @Override
     public Graph loadGraph() {
         final Topology topology = getOperationalTopology();
-        final ImmutableGraph.ImmutableGraphBuilder graphBuilder = ImmutableGraph.builder(getGraphInfo());
+        final ImmutableGraph.Builder graphBuilder = ImmutableGraph.newBuilder(getGraphInfo());
         topology.getNode().forEach(n -> {
             final String nodeId = n.getNodeId().getValue();;
             final String foreignId = nodeId.replaceAll(":", "_"); // Should match foreignId from requisition to have it enrich later with NodeInfo data
-            final ImmutableVertex.ImmutableVertexBuilder vertexBuilder = ImmutableVertex.builder();
-            final Vertex vertex = vertexBuilder.namespace(graphBuilder.getNamespace())
-                    .id(n.getNodeId().getValue())
+            final Vertex vertex = graphBuilder.vertex(n.getNodeId().getValue())
                     .nodeRef(OpendaylightRequisitionProvider.DEFAULT_FOREIGN_SOURCE, foreignId)
-                    .property("latitude", "45.340561") // Example custom property latitude
-                    .property("longitude", "-75.910005") // Example custom property longitude
+                    .iconId(IconIds.Switch)
+                    .property("custom", "value") // Example custom property
+                    .property("custom2", "value2") // Example custom property
                     .build();
             graphBuilder.addVertex(vertex);
         });
@@ -79,11 +76,10 @@ public class OpendaylightGraphProvider implements GraphProvider {
             final String linkId = link.getLinkId().getValue();
             final String sourceNodeId = link.getSource().getSourceNode().getValue();
             final String targetNodeId = link.getDestination().getDestNode().getValue();
-            final Edge edge = ImmutableEdge.builder()
-                    .namespace(graphBuilder.getNamespace())
-                    .id(linkId)
-                    .source(graphBuilder.getNamespace(), sourceNodeId)
-                    .target(graphBuilder.getNamespace(), targetNodeId)
+            final Edge edge = graphBuilder.edge(linkId, graphBuilder.getVertex(sourceNodeId), graphBuilder.getVertex(targetNodeId))
+                    .label("Edge " + linkId)
+                    .property("custom1", "value1")
+                    .property("custom2", "value2")
                     .build();
             graphBuilder.addEdge(edge);
         });
@@ -99,17 +95,7 @@ public class OpendaylightGraphProvider implements GraphProvider {
 
     @Override
     public GraphInfo getGraphInfo() {
-        return new ImmutableGraphInfo(NAMESPACE, LABEL, DESCRIPTION);
-    }
-
-    @Override
-    public Configuration getConfiguration() {
-        return new Configuration() {
-            @Override
-            public boolean isTopology() {
-                return true;
-            }
-        };
+        return ImmutableGraphInfo.newBuilder(NAMESPACE, LABEL, DESCRIPTION).build();
     }
 
     private Topology getOperationalTopology() {
