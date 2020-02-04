@@ -36,6 +36,8 @@ import org.opennms.integration.api.v1.graph.Graph;
 import org.opennms.integration.api.v1.graph.GraphInfo;
 import org.opennms.integration.api.v1.graph.GraphProvider;
 import org.opennms.integration.api.v1.graph.Vertex;
+import org.opennms.integration.api.v1.graph.configuration.GraphCacheStrategy;
+import org.opennms.integration.api.v1.graph.configuration.GraphConfiguration;
 import org.opennms.integration.api.v1.graph.immutables.ImmutableGraph;
 import org.opennms.integration.api.v1.graph.immutables.ImmutableGraphInfo;
 import org.opennms.integration.api.v1.topology.IconIds;
@@ -96,6 +98,16 @@ public class OpendaylightGraphProvider implements GraphProvider {
     @Override
     public GraphInfo getGraphInfo() {
         return ImmutableGraphInfo.newBuilder(NAMESPACE, LABEL, DESCRIPTION).build();
+    }
+
+    @Override
+    public GraphConfiguration getGraphConfiguration() {
+        return new GraphConfiguration() {
+            @Override
+            public GraphCacheStrategy getGraphCacheStrategy() {
+                return GraphCacheStrategy.FOREVER;
+            }
+        };
     }
 
     private Topology getOperationalTopology() {
