@@ -46,7 +46,7 @@ public class OpendaylightGraphProvider implements GraphProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(OpendaylightTopologyHandler.class);
 
-    private static final String NAMESPACE = "flow:1";
+    static final String NAMESPACE = "flow:1";
     private static final String LABEL = "OpenDaylight Topology";
     private static final String DESCRIPTION = "The Opendaylight Topology displays information provided by the opennms-opendaylight-plugin";
 

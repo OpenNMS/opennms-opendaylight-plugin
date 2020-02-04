@@ -143,8 +143,9 @@ public class OpendaylightTopologyHandler implements EventListener {
             pushLinkUpdates(node, expectedLinks, nodesByLabel);
         }
 
-        // TODO MVR: Technically this is not required. Or is it?
-        graphContainerCache.invalidate("flow:1");
+        // At the moment each graph is cached forever, unless the bundle is stopped or invalidated manually
+        // In order to get the new version after we imported the requisition, we must invalidate the graph manually here
+        graphContainerCache.invalidate(OpendaylightGraphProvider.NAMESPACE);
     }
 
     private void pushLinkUpdates(Node node, List<Link> expectedLinks, Map<String,Node> nodesByLabel) {
