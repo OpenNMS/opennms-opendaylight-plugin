@@ -19,7 +19,7 @@ This document will walk you through setting up the Opendaylight integration and 
 
 == Setting up OpenNMS
 
-This walkthrough assumes that you have an existing instance of OpenNMS Horizon 25.0.0 or greater running.
+This walkthrough assumes that you have an existing instance of OpenNMS Horizon 29.0.0 or greater running.
 
 == Setup the network
 
@@ -58,7 +58,6 @@ Use a script that connects to a remote controller:
 cat >net.py <<EOT
 #!/usr/bin/python
 from mininet.net import Mininet
-from mininet.net import Containernet
 from mininet.node import Controller, RemoteController
 from mininet.topolib import TreeTopo
 from mininet.cli import CLI
@@ -168,7 +167,7 @@ Connect to the Opendaylight controller         [ Success  ] => Found 1 topology(
 
 Render the requisition using:
 ```
-provision:show-import -x opendaylight
+opennms:show-import -x opendaylight
 ```
 
 TIP: Add a foreign source with no detectors:
@@ -178,12 +177,12 @@ TIP: Add a foreign source with no detectors:
 
 Trigger the import using:
 ```
-provision:import-requisition opendaylight
+opennms:import-requisition opendaylight
 ```
 
 Verify that the nodes were provisioned and have started persisting metrics:
 ```
-opennms-measurements:show-resources -n ODL:openflow_1
+opennms:show-measurement-resources -n ODL:openflow_1
 ```
 
 == Topology

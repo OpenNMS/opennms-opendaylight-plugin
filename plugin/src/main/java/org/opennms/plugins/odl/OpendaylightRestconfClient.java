@@ -34,8 +34,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import javax.annotation.Nullable;
-
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingCodecTreeNode;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecRegistry;
@@ -460,7 +458,7 @@ public class OpendaylightRestconfClient {
         }
 
         @Override
-        public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
+        public void onFailure(WebSocket webSocket, Throwable t, Response response) {
             LOG.warn("Websocket failure.", t);
         }
     }

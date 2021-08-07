@@ -74,6 +74,7 @@
                             <descriptors>
                                 <descriptor>mvn:org.apache.karaf.features/framework/${karaf.version}/xml/features</descriptor>
                                 <descriptor>mvn:org.apache.karaf.features/standard/${karaf.version}/xml/features</descriptor>
+                                <descriptor>mvn:org.opennms.integration.api/karaf-features/${opennms.api.version}/xml</descriptor>
                                 <descriptor>file:${project.build.directory}/classes/features.xml</descriptor>
                             </descriptors>
                             <distribution>org.apache.karaf.features:framework</distribution>
@@ -84,8 +85,9 @@
                                 <!-- <feature>opennms-plugins-odl</feature> -->
                                 <feature>my-odl-yang-support</feature>
                                 <feature>my-odl-mdsal-models</feature>
-                                <feature>netty</feature>
-                                <feature>okhttp</feature>
+                                <feature>odl-netty</feature>
+                                <feature>odl-okhttp</feature>
+                                <feature>odl-guava</feature>
                             </features>
                         </configuration>
                     </execution>
