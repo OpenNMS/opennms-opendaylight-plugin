@@ -37,6 +37,7 @@ import org.opennms.integration.api.v1.model.Node;
 
 public class OdlMetadata {
     public static final String NODE_ID_KEY = "nodeId";
+    public static final String NODE_ID_INDEX_KEY = "nodeIdIndex";
     public static final String TOPOLOGY_ID_KEY = "topologyId";
 
     private final Map<String, String> metadata;

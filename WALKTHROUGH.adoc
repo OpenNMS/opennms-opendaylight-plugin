@@ -12,7 +12,7 @@ It can be used to help you:
 * Interact with topology
 * Interact with performance data
 * Interact with correlation
-* Interact with flows link:FLOWS.md[(Help Wanted)]
+* Interact with flows
 * Develop using the OIA
 
 This document will walk you through setting up the Opendaylight integration and use it to show case some of the features available in OpenNMS.
@@ -123,15 +123,22 @@ s4-eth3<->h9-eth0 (OK OK)
 
 In a separate shell in the Mininet container run:
 ```
-export COLLECTOR_IP=172.17.0.1
-export COLLECTOR_PORT=4730
-
-ovs-appctl vlog/set ipfix:file:dbg
-
+cat >enable_flows.sh <<EOT
+COLLECTOR_IP=172.23.2.78
+COLLECTOR_PORT=4730
+INDEX=1
 for SWITCH in "s1" "s2" "s3" "s4"
 do
-ovs-vsctl -- set Bridge $SWITCH ipfix=@i -- --id=@i create IPFIX targets=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" obs_domain_id=12 obs_point_id=1
+        ovs-vsctl -- set Bridge $SWITCH ipfix=@i -- --id=@i create IPFIX targets=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" obs_domain_id="${INDEX}"
+        let INDEX=${INDEX}+1
 done
+EOT
+```
+
+Start the script:
+```
+chmod +x enable_flows.sh
+./enable_flows.sh
 ```
 
 TIP: Use `iperf h1 h4` in the Mininet console to generate traffic.
@@ -183,6 +190,17 @@ opennms:import-requisition opendaylight
 Verify that the nodes were provisioned and have started persisting metrics:
 ```
 opennms:show-measurement-resources -n ODL:openflow_1
+```
+
+== Flows
+
+Update `etc/telemetryd-configuration.xml`:
+```
+   <queue name="IPFIX">
+        <adapter name="IPFIX-Adapter" class-name="org.opennms.netmgt.telemetry.protocols.netflow.adapter.ipfix.IpfixAdapter" enabled="true">
+            <parameter key="metaDataNodeLookup" value="ODL:nodeIdIndex"/>
+        </adapter>
+    </queue>
 ```
 
 == Topology

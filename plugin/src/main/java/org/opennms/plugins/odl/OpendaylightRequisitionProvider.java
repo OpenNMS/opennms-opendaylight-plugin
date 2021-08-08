@@ -28,6 +28,7 @@
 
 package org.opennms.plugins.odl;
 
+import static org.opennms.plugins.odl.OdlMetadata.NODE_ID_INDEX_KEY;
 import static org.opennms.plugins.odl.OdlMetadata.NODE_ID_KEY;
 import static org.opennms.plugins.odl.OdlMetadata.TOPOLOGY_ID_KEY;
 
@@ -49,6 +50,8 @@ import org.opennms.integration.api.v1.requisition.RequisitionRepository;
 import org.opennms.integration.api.v1.requisition.RequisitionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 public class OpendaylightRequisitionProvider implements RequisitionProvider {
     private static final Logger LOG = LoggerFactory.getLogger(OpendaylightRestconfClient.class);
@@ -107,8 +110,10 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                 continue;
             }
             final String topologyId = topology.getTopologyId().getValue();
+
             for (Node node : topology.getNode()) {
                 final String nodeId = node.getNodeId().getValue();
+                final String nodeIdIndex = getNodeIndexFromId(nodeId);
 
                 // Colons are typically used a separators, so we replace them to be safe
                 final String foreignId = nodeId.replaceAll(":", "_");
@@ -120,6 +125,11 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                                 .setContext(METADATA_CONTEXT_ID)
                                 .setKey(NODE_ID_KEY)
                                 .setValue(nodeId)
+                                .build())
+                        .addMetaData(ImmutableRequisitionMetaData.newBuilder()
+                                .setContext(METADATA_CONTEXT_ID)
+                                .setKey(NODE_ID_INDEX_KEY)
+                                .setValue(nodeIdIndex)
                                 .build())
                         .addMetaData(ImmutableRequisitionMetaData.newBuilder()
                                 .setContext(METADATA_CONTEXT_ID)
@@ -137,6 +147,14 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
         }
 
         return requisitionBuilder.build();
+    }
+
+    private String getNodeIndexFromId(String nodeId) {
+        if (Strings.isNullOrEmpty(nodeId)) {
+            return "";
+        }
+        final String[] tokens = nodeId.split(":");
+        return tokens[tokens.length-1];
     }
 
     @Override
