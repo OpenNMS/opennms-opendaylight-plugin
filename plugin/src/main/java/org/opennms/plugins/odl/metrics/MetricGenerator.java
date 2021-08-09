@@ -67,29 +67,27 @@ public class MetricGenerator {
 
         // A node has many connectors, which operate like "interfaces" in OpenNMS
         for (NodeConnector nodeConnector : odlNode.getNodeConnector()) {
-            // Unique ID
-            final String nodeConnectorId = nodeConnector.getId().getValue();
+            final FlowCapableNodeConnector flowCapableNodeConnector = nodeConnector.getAugmentation(FlowCapableNodeConnector.class);
+            final String ifName = flowCapableNodeConnector.getName();
             // Replace all non alpha-numeric characters
-            final String sanitizedNodeConnectorId = nodeConnectorId.replaceAll("[^A-Za-z0-9]", "_");
+            final String sanitizedIfName = ifName.replaceAll("[^A-Za-z0-9]", "_");
 
             // Build an IP interface resource, using the nodeConnectorId as the instance id
-            final IpInterfaceResource ipInterfaceResource = ImmutableIpInterfaceResource.newInstance(nodeResource, sanitizedNodeConnectorId);
+            final IpInterfaceResource ipInterfaceResource = ImmutableIpInterfaceResource.newInstance(nodeResource, sanitizedIfName);
             final ImmutableCollectionSetResource.Builder<?> resourceBuilder = ImmutableCollectionSetResource.newBuilder(IpInterfaceResource.class)
                     .setResource(ipInterfaceResource);
 
             // Store all attributes in the same group
             final String groupName = "opendaylight-port-statistics";
 
-            final FlowCapableNodeConnector flowCapableNodeConnector = nodeConnector.getAugmentation(FlowCapableNodeConnector.class);
-            // ifName
-            resourceBuilder.addStringAttribute(string("ifName", groupName, flowCapableNodeConnector::getName));
-
-            // ifHighSpeed - currentSpeed is in kbps
-            resourceBuilder.addStringAttribute(string("ifHighSpeed", groupName, () -> Long.toString(flowCapableNodeConnector.getCurrentSpeed() / 1000)));
-
             final FlowCapableNodeConnectorStatisticsData flow = nodeConnector.getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
             if (flow != null) {
                 final FlowCapableNodeConnectorStatistics flowStats = flow.getFlowCapableNodeConnectorStatistics();
+                // ifName (i.e. s4-eth1)
+                resourceBuilder.addStringAttribute(string("ifName", groupName, () -> ifName));
+
+                // ifHighSpeed - currentSpeed is in kbps
+                resourceBuilder.addStringAttribute(string("ifHighSpeed", groupName, () -> Long.toString(flowCapableNodeConnector.getCurrentSpeed() / 1000)));
 
                 // ifHCInOctets, ifHCOutOctets
                 resourceBuilder.addNumericAttribute(counter("ifHCInOctets", groupName, () -> flowStats.getBytes().getReceived()));

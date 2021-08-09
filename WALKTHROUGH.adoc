@@ -63,6 +63,9 @@ from mininet.topolib import TreeTopo
 from mininet.cli import CLI
 from mininet.link import TCLink
 from mininet.log import info, setLogLevel
+from os import listdir
+import re
+import json
 setLogLevel('info')
 
 c0 = RemoteController('c0', ip='$OPENDAYLIGHT_HOST', port=$OPENDAYLIGHT_PORT)
@@ -70,6 +73,29 @@ topo = TreeTopo(depth=2, fanout=3)
 net = Mininet(topo=topo, build=False)
 net.addController(c0)
 net.build()
+
+# Gather the ifIndex
+topo = {'nodes':{}}
+for sw in net.switches:
+  topo['nodes'][sw.name] = {'ports':{}}
+path = '/sys/devices/virtual/net/'
+for child in listdir(path):
+  parts = re.match('(^.+)-(.+)', child)
+  if parts == None: continue
+  if parts.group(1) in topo['nodes']:
+    ifindex = open(path+child+'/ifindex').read().split('\n',1)[0]
+    topo['nodes'][parts.group(1)]['ports'][child] = {'ifindex': ifindex}
+
+print('*** Network interface details***')
+for node in topo['nodes']:
+    index = re.findall(r'\d+', node)[0]
+    print "opennms-odl:sync-snmp-interfaces -k %s" % (index),
+    for ifName in topo['nodes'][node]['ports']:
+        ifIndex = topo['nodes'][node]['ports'][ifName]['ifindex']
+        print " -i %s -n %s" % (ifIndex, ifName),
+    print
+print('******')
+
 net.start()
 info('*** Running CLI\n')
 CLI(net)
