@@ -41,6 +41,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opennms.integration.api.v1.config.requisition.Requisition;
+import org.opennms.integration.api.v1.config.requisition.SnmpPrimaryType;
 import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisition;
 import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisitionInterface;
 import org.opennms.integration.api.v1.config.requisition.immutables.ImmutableRequisitionMetaData;
@@ -139,6 +140,8 @@ public class OpendaylightRequisitionProvider implements RequisitionProvider {
                         .addInterface(ImmutableRequisitionInterface.newBuilder()
                                 .setIpAddress(NON_RESPONSIVE_IP_ADDRESS)
                                 .addMonitoredService("SDN")
+                                // Set a primary interface because certain features (incl. flows) expect one
+                                .setSnmpPrimary(SnmpPrimaryType.PRIMARY)
                                 .build())
                         .addAsset("latitude", "45.340561")
                         .addAsset("longitude", "-75.910005")
